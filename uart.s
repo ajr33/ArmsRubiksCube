@@ -80,7 +80,7 @@ face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
 face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
 face6: .byte 0x2, 0x10, 0x20, 0x20, 0x4, 0x8, 0x10, 0x20, 0x40
 
-
+currentFace:	.byte 1
 
 
 ; Player data
@@ -131,7 +131,7 @@ ptr_playerYellow:	.word playerYellow
 
 
 ; pointers to faces
-ptr_currentFace:	.word face1
+ptr_currentFace:	.word currentFace
 
 ptr_face1:	.word face1
 ptr_face2:	.word face2
@@ -202,9 +202,14 @@ U0FR: .equ 0x18		;UART0 Flag Register
 draw_colors:
 	push {r4, lr}
 
-	; load face 1
-	ldr		r4, ptr_face1 ; TODO change out of hard coded value
+	; load face
+	ldr		r2, ptr_currentFace
+	ldrb	r3, [r2]
 
+	bl 		check_faces
+
+
+start_drawing:
 	; goto location of grid 1
 	ldr 	r0, ptr_grid1
 	bl 		output_string
@@ -423,6 +428,47 @@ get_color_end:
 	mov pc, lr
 
 
+; checks which face pointer to load based on value stored in r3
+; loads face pointer into r4
+check_faces:
+	cmp		r3, #1
+	bne		check_face2
+	ldr		r4, ptr_face1
+	b		check_faces_end
+
+check_face2:
+	cmp		r3, #2
+	bne		check_face3
+	ldr		r4, ptr_face2
+	b		check_faces_end
+
+check_face3:
+	cmp		r3, #3
+	bne		check_face4
+	ldr		r4, ptr_face3
+	b		check_faces_end
+
+check_face4:
+	cmp		r3, #4
+	bne		check_face5
+	ldr		r4, ptr_face4
+	b		check_faces_end
+
+check_face5:
+	cmp		r3, #5
+	bne		check_face6
+	ldr		r4, ptr_face5
+	b		check_faces_end
+
+check_face6:
+	cmp		r3, #6
+	bne		draw_end
+	ldr		r4, ptr_face6
+
+check_faces_end:
+	mov pc, lr
+
+
 
 uart_init:
 	PUSH	{lr}   						; Store register lr on stack
@@ -585,6 +631,25 @@ UART0_Handler:
 	; saves read character into r0
 	bl 		simple_read_character
 
+	cmp		r0, #'1'
+	beq		toFace1
+
+	cmp		r0, #'2'
+	beq		toFace2
+
+	cmp		r0, #'3'
+	beq		toFace3
+
+	cmp		r0, #'4'
+	beq		toFace4
+
+	cmp		r0, #'5'
+	beq		toFace5
+
+	cmp		r0, #'6'
+	beq		toFace6
+
+
 	cmp 	r0, #' '
 	beq		pickColor
 
@@ -627,33 +692,71 @@ moveRight:
 	b 		update_position
 
 
+toFace1:
+	ldr		r0, ptr_currentFace
+	mov		r1, #1
+	strb	r1, [r0]
+	b		finish_player_move
+
+toFace2:
+	ldr		r0, ptr_currentFace
+	mov		r1, #2
+	strb	r1, [r0]
+	b		finish_player_move
+
+toFace3:
+	ldr		r0, ptr_currentFace
+	mov		r1, #3
+	strb	r1, [r0]
+	b		finish_player_move
+toFace4:
+	ldr		r0, ptr_currentFace
+	mov		r1, #4
+	strb	r1, [r0]
+	b		finish_player_move
+
+toFace5:
+	ldr		r0, ptr_currentFace
+	mov		r1, #5
+	strb	r1, [r0]
+	b		finish_player_move
+
+toFace6:
+	ldr		r0, ptr_currentFace
+	mov		r1, #6
+	strb	r1, [r0]
+	b		finish_player_move
+
+
+
 pickColor:
 
 	ldr		r0, ptr_playerPos
-	ldrb	r4,	[r0]
-	sub		r4, #1
+	ldrb	r1,	[r0]
+	sub		r1, #1
 
 	ldr		r0, ptr_currentFace
-	ldrb	r2, [r0, r4]
+	ldrb	r3, [r0]
+	bl		check_faces	;resulting face in r4
 
+	ldrb	r2, [r4, r1] ; get square color of current face
 
 	mov		r0, #0
 swap_color_check:
 	add		r0, #1
 	lsr		r2, r2, #1
 	cmp		r2, #1
-	bne		swap_color_check
+	bgt		swap_color_check
 
 	; store the player's new color
 	ldr 	r2, ptr_playerColor
-	ldrb	r1,	[r2]
+	ldrb	r3,	[r2]
 	strb	r0, [r2]
 
 	mov		r0, #1
-	lsl		r0, r0, r1
+	lsl		r0, r0, r3
 
-	ldr		r1, ptr_currentFace
-	strb	r0,	[r1, r4]
+	strb	r0,	[r4, r1] ; store player color on sqaure
 
 
 finish_player_move:
@@ -1062,7 +1165,7 @@ right_9:
 
 
 check_if_valid_move:
-	push 	{r2}
+	push 	{r2, lr}
 	; r1 should store the square the player wants to go to and the square that should be checked if it is valid
 	sub 	r1, #1	;for indexing sub by 1
 
@@ -1071,14 +1174,17 @@ check_if_valid_move:
 	ldrb	r2, [r0]
 
 	ldr		r0, ptr_currentFace
-	ldrb	r3, [r0, r1]
+	ldrb	r3, [r0]
+	bl		check_faces ; stores face in r4
+
+	ldrb	r3, [r4, r1]
 
 	; shift left by player's color
 	mov 	r0, #1
 	lsl 	r0, r0, r2
 
 
-	pop 	{r2}
+	pop 	{r2, lr}
 
 	cmp		r0, r3
 	bne		is_valid
