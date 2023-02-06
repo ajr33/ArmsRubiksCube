@@ -19,27 +19,27 @@ board_outline: 	.string 0xC, 27, "[?25h" , 27, "[37;40m"
 ;						color string	cursor down cursor back
 red: 		.string 27, "[41m      ", 27, "[1B", 27, "[6D"
 			.string 		"      ", 27, "[1B", 27, "[6D"
-			.string 		"      ", 0
+			.string 		"      ", 27, "[40m", 0
 
 white: 		.string 27, "[107m      ", 27, "[1B", 27, "[6D"
 			.string 		"      ", 27, "[1B", 27, "[6D"
-			.string 		"      ", 0
+			.string 		"      ", 27, "[40m", 0
 
 purple: 	.string 27, "[45m      ", 27, "[1B", 27, "[6D"
 			.string 		"      ", 27, "[1B", 27, "[6D"
-			.string 		"      ", 0
+			.string 		"      ", 27, "[40m", 0
 
 blue: 		.string 27, "[44m      ", 27, "[1B", 27, "[6D"
 			.string 		"      ", 27, "[1B", 27, "[6D"
-			.string 		"      ", 0
+			.string 		"      ", 27, "[40m", 0
 
 green: 		.string 27, "[102m      ", 27, "[1B", 27, "[6D"
 			.string 		"      ", 27, "[1B", 27, "[6D"
-			.string 		"      ", 0
+			.string 		"      ", 27, "[40m", 0
 
 yellow: 	.string 27, "[103m      ", 27, "[1B", 27, "[6D"
 			.string 		"      ", 27, "[1B", 27, "[6D"
-			.string 		"      ", 0
+			.string 		"      ", 27, "[40m", 0
 
 
 
@@ -89,12 +89,12 @@ playerColor:	.byte 1
 
 
 ; Colors for player
-playerRed: 		.string 27 , "[41m    ", 0
-playerWhite: 	.string 27 , "[107m    ", 0
-playerPurple: 	.string 27 , "[45m    ", 0
-playerBlue: 	.string 27 , "[44m    ", 0
-playerGreen: 	.string 27 , "[102m    ", 0
-playerYellow: 	.string 27 , "[103m    ", 0
+playerRed: 		.string 27 , "[41m    ",  	27, "[40m", 0
+playerWhite: 	.string 27 , "[107m    ", 	27, "[40m", 0
+playerPurple: 	.string 27 , "[45m    ",  	27, "[40m", 0
+playerBlue: 	.string 27 , "[44m    ", 	27, "[40m", 0
+playerGreen: 	.string 27 , "[102m    ",	27, "[40m", 0
+playerYellow: 	.string 27 , "[103m    ", 	27, "[40m", 0
 
 
 
