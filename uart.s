@@ -585,7 +585,8 @@ UART0_Handler:
 	; saves read character into r0
 	bl 		simple_read_character
 
-
+	cmp 	r0, #' '
+	beq		pickColor
 
 	cmp		r0, #'w'
 	beq		moveUp
@@ -625,6 +626,34 @@ moveRight:
 	mov 	r0, #8
 	b 		update_position
 
+
+pickColor:
+
+	ldr		r0, ptr_playerPos
+	ldrb	r4,	[r0]
+	sub		r4, #1
+
+	ldr		r0, ptr_currentFace
+	ldrb	r2, [r0, r4]
+
+
+	mov		r0, #0
+swap_color_check:
+	add		r0, #1
+	lsr		r2, r2, #1
+	cmp		r2, #1
+	bne		swap_color_check
+
+	; store the player's new color
+	ldr 	r2, ptr_playerColor
+	ldrb	r1,	[r2]
+	strb	r0, [r2]
+
+	mov		r0, #1
+	lsl		r0, r0, r1
+
+	ldr		r1, ptr_currentFace
+	strb	r0,	[r1, r4]
 
 
 finish_player_move:
@@ -685,6 +714,7 @@ update_from_1:
 	cmp 	r0, #1
 	bne		left_1
 	;mov		r1,	#2
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b		finish_player_move
 
@@ -693,6 +723,7 @@ left_1:
 	cmp 	r0, #2
 	bne		down_1
 	;mov		r1,	#8
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b		finish_player_move
 
@@ -701,6 +732,7 @@ down_1:
 	cmp 	r0, #4
 	bne		right_1
 	mov		r1,	#8
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b 		finish_player_move
 
@@ -709,6 +741,7 @@ right_1:
 	cmp 	r0, #8
 	bne		actual_end
 	mov		r1,	#2
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -719,6 +752,7 @@ update_from_2:
 	cmp 	r0, #1
 	bne		left_2
 	;mov		r1,	#2
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b		finish_player_move
 
@@ -727,6 +761,7 @@ left_2:
 	cmp 	r0, #2
 	bne		down_2
 	mov		r1,	#1
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -735,6 +770,7 @@ down_2:
 	cmp 	r0, #4
 	bne		right_2
 	mov		r1,	#9
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b 		finish_player_move
 
@@ -743,6 +779,7 @@ right_2:
 	cmp 	r0, #8
 	bne		actual_end
 	mov		r1,	#3
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -754,6 +791,7 @@ update_from_3:
 	cmp 	r0, #1
 	bne		left_3
 	;mov		r1,	#2
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b		finish_player_move
 
@@ -762,6 +800,7 @@ left_3:
 	cmp 	r0, #2
 	bne		down_3
 	mov		r1,	#2
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -770,6 +809,7 @@ down_3:
 	cmp 	r0, #4
 	bne		right_3
 	mov		r1,	#4
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b 		finish_player_move
 
@@ -778,6 +818,7 @@ right_3:
 	cmp 	r0, #8
 	bne		actual_end
 	;mov		r1,	#4
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b		finish_player_move
 
@@ -789,6 +830,7 @@ update_from_4:
 	cmp 	r0, #1
 	bne		left_4
 	mov		r1,	#3
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -797,6 +839,7 @@ left_4:
 	cmp 	r0, #2
 	bne		down_4
 	mov		r1,	#9
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -805,6 +848,7 @@ down_4:
 	cmp 	r0, #4
 	bne		right_4
 	mov		r1,	#5
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b 		finish_player_move
 
@@ -813,6 +857,7 @@ right_4:
 	cmp 	r0, #8
 	bne		actual_end
 	;mov		r1,	#4
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b		finish_player_move
 
@@ -824,6 +869,7 @@ update_from_5:
 	cmp 	r0, #1
 	bne		left_5
 	mov		r1,	#4
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -832,6 +878,7 @@ left_5:
 	cmp 	r0, #2
 	bne		down_5
 	mov		r1,	#6
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -840,6 +887,7 @@ down_5:
 	cmp 	r0, #4
 	bne		right_5
 	;mov		r1,	#6
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b 		finish_player_move
 
@@ -848,6 +896,7 @@ right_5:
 	cmp 	r0, #8
 	bne		actual_end
 	;mov		r1,	#4
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b		finish_player_move
 
@@ -859,6 +908,7 @@ update_from_6:
 	cmp 	r0, #1
 	bne		left_6
 	mov		r1,	#9
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -867,6 +917,7 @@ left_6:
 	cmp 	r0, #2
 	bne		down_6
 	mov		r1,	#7
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -875,6 +926,7 @@ down_6:
 	cmp 	r0, #4
 	bne		right_6
 	;mov		r1,	#6
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b 		finish_player_move
 
@@ -883,6 +935,7 @@ right_6:
 	cmp 	r0, #8
 	bne		actual_end
 	mov		r1,	#5
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -894,6 +947,7 @@ update_from_7:
 	cmp 	r0, #1
 	bne		left_7
 	mov		r1,	#8
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -902,6 +956,7 @@ left_7:
 	cmp 	r0, #2
 	bne		down_7
 	;mov		r1,	#8
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b		finish_player_move
 
@@ -910,6 +965,7 @@ down_7:
 	cmp 	r0, #4
 	bne		right_7
 	;mov		r1,	#6
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b 		finish_player_move
 
@@ -918,6 +974,7 @@ right_7:
 	cmp 	r0, #8
 	bne		actual_end
 	mov		r1,	#6
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -929,6 +986,7 @@ update_from_8:
 	cmp 	r0, #1
 	bne		left_8
 	mov		r1,	#1
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -937,6 +995,7 @@ left_8:
 	cmp 	r0, #2
 	bne		down_8
 	;mov		r1,	#8
+	;bl		check_if_valid_move
 	;strb	r1, [r2]
 	b		finish_player_move
 
@@ -945,6 +1004,7 @@ down_8:
 	cmp 	r0, #4
 	bne		right_8
 	mov		r1,	#7
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b 		finish_player_move
 
@@ -953,6 +1013,7 @@ right_8:
 	cmp 	r0, #8
 	bne		actual_end
 	mov		r1,	#9
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
