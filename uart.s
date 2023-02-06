@@ -73,21 +73,28 @@ face_blue: 		.equ 0x10	; color 4
 face_green:		.equ 0x20	; color 5
 face_yellow:	.equ 0x40	; color 6
 
-face1: .word 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
-face2: .word 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
-face3: .word 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
-face4: .word 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
-face5: .word 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
-face6: .word 0x2, 0x10, 0x20, 0x20, 0x4, 0x8, 0x10, 0x20, 0x40
+face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
+face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
+face3: .byte 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
+face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
+face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
+face6: .byte 0x2, 0x10, 0x20, 0x20, 0x4, 0x8, 0x10, 0x20, 0x40
+
+
 
 
 ; Player data
 playerPos: 		.byte 9
-playerColor:	.byte 6
+playerColor:	.byte 1
 
 
 ; Colors for player
-playerRed: 	.string 27 , "[41m    ", 0
+playerRed: 		.string 27 , "[41m    ", 0
+playerWhite: 	.string 27 , "[107m    ", 0
+playerPurple: 	.string 27 , "[45m    ", 0
+playerBlue: 	.string 27 , "[44m    ", 0
+playerGreen: 	.string 27 , "[102m    ", 0
+playerYellow: 	.string 27 , "[103m    ", 0
 
 
 
@@ -114,10 +121,18 @@ ptr_green:	.word green
 ptr_yellow:	.word yellow
 
 ; player colors
-ptr_playerRed:	.word playerRed
+ptr_playerRed:		.word playerRed
+ptr_playerWhite:	.word playerWhite
+ptr_playerPurple:	.word playerPurple
+ptr_playerBlue:		.word playerBlue
+ptr_playerGreen:	.word playerGreen
+ptr_playerYellow:	.word playerYellow
+
 
 
 ; pointers to faces
+ptr_currentFace:	.word face1
+
 ptr_face1:	.word face1
 ptr_face2:	.word face2
 ptr_face3:	.word face3
@@ -193,55 +208,55 @@ draw_colors:
 	; goto location of grid 1
 	ldr 	r0, ptr_grid1
 	bl 		output_string
-	ldr 	r0, [r4], #4
+	ldrb 	r0, [r4], #1
 	bl 		get_color
 	bl 		output_string
 
 	ldr 	r0, ptr_grid2
 	bl 		output_string
-	ldr 	r0, [r4], #4
+	ldrb 	r0, [r4], #1
 	bl 		get_color
 	bl 		output_string
 
 	ldr 	r0, ptr_grid3
 	bl 		output_string
-	ldr 	r0, [r4], #4
+	ldrb 	r0, [r4], #1
 	bl 		get_color
 	bl 		output_string
 
 	ldr 	r0, ptr_grid4
 	bl 		output_string
-	ldr 	r0, [r4], #4
+	ldrb 	r0, [r4], #1
 	bl 		get_color
 	bl 		output_string
 
 	ldr 	r0, ptr_grid5
 	bl 		output_string
-	ldr 	r0, [r4], #4
+	ldrb 	r0, [r4], #1
 	bl 		get_color
 	bl 		output_string
 
 	ldr 	r0, ptr_grid6
 	bl 		output_string
-	ldr 	r0, [r4], #4
+	ldrb 	r0, [r4], #1
 	bl 		get_color
 	bl 		output_string
 
 	ldr 	r0, ptr_grid7
 	bl 		output_string
-	ldr 	r0, [r4], #4
+	ldrb 	r0, [r4], #1
 	bl 		get_color
 	bl 		output_string
 
 	ldr 	r0, ptr_grid8
 	bl 		output_string
-	ldr 	r0, [r4], #4
+	ldrb 	r0, [r4], #1
 	bl 		get_color
 	bl 		output_string
 
 	ldr 	r0, ptr_grid9
 	bl 		output_string
-	ldr 	r0, [r4], #4
+	ldrb 	r0, [r4], #1
 	bl 		get_color
 	bl 		output_string
 
@@ -304,7 +319,59 @@ checkPos9:
 
 draw_player:
 	bl 		output_string
+
+	;get player color
+	ldr 	r0, ptr_playerColor
+	ldrb	r1,	[r0]
+
+	cmp 	r1, #1
+	beq		set_player_red
+
+	cmp 	r1, #2
+	beq		set_player_white
+
+	cmp 	r1, #3
+	beq		set_player_purple
+
+	cmp 	r1, #4
+	beq		set_player_blue
+
+	cmp 	r1, #5
+	beq		set_player_green
+
+	cmp 	r1, #6
+	beq		set_player_yellow
+
+	; if invalid color, default to red
+	b		set_player_red
+
+set_player_red:
 	ldr 	r0, ptr_playerRed
+	bl		output_string
+	b		draw_end
+
+set_player_white:
+	ldr 	r0, ptr_playerWhite
+	bl		output_string
+	b		draw_end
+
+set_player_purple:
+	ldr 	r0, ptr_playerPurple
+	bl		output_string
+	b		draw_end
+
+set_player_blue:
+	ldr 	r0, ptr_playerBlue
+	bl		output_string
+	b		draw_end
+
+set_player_green:
+	ldr 	r0, ptr_playerGreen
+	bl		output_string
+	b		draw_end
+
+set_player_yellow:
+	ldr 	r0, ptr_playerYellow
 	bl		output_string
 
 draw_end:
@@ -897,6 +964,7 @@ update_from_9:
 	cmp 	r0, #1
 	bne		left_9
 	mov		r1,	#2
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -905,6 +973,7 @@ left_9:
 	cmp 	r0, #2
 	bne		down_9
 	mov		r1,	#8
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -913,6 +982,7 @@ down_9:
 	cmp 	r0, #4
 	bne		right_9
 	mov		r1,	#6
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b 		finish_player_move
 
@@ -921,10 +991,42 @@ right_9:
 	cmp 	r0, #8
 	bne		actual_end
 	mov		r1,	#4
+	bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
 
+
+
+
+
+check_if_valid_move:
+	push 	{r2}
+	; r1 should store the square the player wants to go to and the square that should be checked if it is valid
+	sub 	r1, #1	;for indexing sub by 1
+
+	; get the player's current color
+	ldr 	r0, ptr_playerColor
+	ldrb	r2, [r0]
+
+	ldr		r0, ptr_currentFace
+	ldrb	r3, [r0, r1]
+
+	; shift left by player's color
+	mov 	r0, #1
+	lsl 	r0, r0, r2
+
+
+	pop 	{r2}
+
+	cmp		r0, r3
+	bne		is_valid
+	b		finish_player_move
+
+
+is_valid:
+	add		r1, #1
+	mov		pc, lr
 
 
 
