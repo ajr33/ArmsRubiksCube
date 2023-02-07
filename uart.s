@@ -81,7 +81,15 @@ face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
 face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
 
 currentFace:	.byte 1
+					;	up, left, down, right, back
+faceDirection:	.byte 	5,	4,	6,	2, 3
 
+blankFace:		.byte	0, 0, 0, 0, 0, 0, 0, 0, 0
+
+LEFT_OFFSET:	.equ	1
+DOWN_OFFSET:	.equ	2
+RIGHT_OFFSET:	.equ	3
+BACK_OFFSET:	.equ	4
 
 ; Player data
 playerPos: 		.byte 9
@@ -132,7 +140,8 @@ ptr_playerYellow:	.word playerYellow
 
 ; pointers to faces
 ptr_currentFace:	.word currentFace
-
+ptr_faceDirection:	.word faceDirection
+ptr_blankFace:		.word blankFace
 ptr_face1:	.word face1
 ptr_face2:	.word face2
 ptr_face3:	.word face3
@@ -206,7 +215,7 @@ draw_colors:
 	ldr		r2, ptr_currentFace
 	ldrb	r3, [r2]
 
-	bl 		check_faces
+	bl 		get_face
 
 
 start_drawing:
@@ -430,42 +439,42 @@ get_color_end:
 
 ; checks which face pointer to load based on value stored in r3
 ; loads face pointer into r4
-check_faces:
+get_face:
 	cmp		r3, #1
-	bne		check_face2
+	bne		get_face2
 	ldr		r4, ptr_face1
-	b		check_faces_end
+	b		get_face_end
 
-check_face2:
+get_face2:
 	cmp		r3, #2
-	bne		check_face3
+	bne		get_face3
 	ldr		r4, ptr_face2
-	b		check_faces_end
+	b		get_face_end
 
-check_face3:
+get_face3:
 	cmp		r3, #3
-	bne		check_face4
+	bne		get_face4
 	ldr		r4, ptr_face3
-	b		check_faces_end
+	b		get_face_end
 
-check_face4:
+get_face4:
 	cmp		r3, #4
-	bne		check_face5
+	bne		get_face5
 	ldr		r4, ptr_face4
-	b		check_faces_end
+	b		get_face_end
 
-check_face5:
+get_face5:
 	cmp		r3, #5
-	bne		check_face6
+	bne		get_face6
 	ldr		r4, ptr_face5
-	b		check_faces_end
+	b		get_face_end
 
-check_face6:
+get_face6:
 	cmp		r3, #6
 	bne		draw_end
 	ldr		r4, ptr_face6
 
-check_faces_end:
+get_face_end:
 	mov pc, lr
 
 
@@ -737,7 +746,7 @@ pickColor:
 
 	ldr		r0, ptr_currentFace
 	ldrb	r3, [r0]
-	bl		check_faces	;resulting face in r4
+	bl		get_face	;resulting face in r4
 
 	ldrb	r2, [r4, r1] ; get square color of current face
 
@@ -810,24 +819,29 @@ update_position:
 
 
 
-
+; r0 = 1 for up
+; r0 = 2 for left
+; r0 = 4 for down
+; r0 = 8 for right
 
 update_from_1:
 	; going up
 	cmp 	r0, #1
 	bne		left_1
-	;mov		r1,	#2
+	mov		r1,	#7
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b		finish_player_move
 
 left_1:
 	;going left
 	cmp 	r0, #2
 	bne		down_1
-	;mov		r1,	#8
+	mov		r1,	#3
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b		finish_player_move
 
 down_1:
@@ -854,9 +868,10 @@ update_from_2:
 	; going up
 	cmp 	r0, #1
 	bne		left_2
-	;mov		r1,	#2
+	mov		r1,	#6
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b		finish_player_move
 
 left_2:
@@ -893,9 +908,10 @@ update_from_3:
 	; going up
 	cmp 	r0, #1
 	bne		left_3
-	;mov		r1,	#2
+	mov		r1,	#5
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b		finish_player_move
 
 left_3:
@@ -920,9 +936,10 @@ right_3:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
-	;mov		r1,	#4
+	mov		r1,	#1
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b		finish_player_move
 
 
@@ -959,9 +976,10 @@ right_4:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
-	;mov		r1,	#4
+	mov		r1,	#8
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b		finish_player_move
 
 
@@ -989,18 +1007,20 @@ down_5:
 	;going down
 	cmp 	r0, #4
 	bne		right_5
-	;mov		r1,	#6
+	mov		r1,	#3
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b 		finish_player_move
 
 right_5:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
-	;mov		r1,	#4
+	mov		r1,	#7
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b		finish_player_move
 
 
@@ -1028,9 +1048,10 @@ down_6:
 	;going down
 	cmp 	r0, #4
 	bne		right_6
-	;mov		r1,	#6
+	mov		r1,	#2
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b 		finish_player_move
 
 right_6:
@@ -1058,18 +1079,20 @@ left_7:
 	;going left
 	cmp 	r0, #2
 	bne		down_7
-	;mov		r1,	#8
+	mov		r1,	#5
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b		finish_player_move
 
 down_7:
 	;going down
 	cmp 	r0, #4
 	bne		right_7
-	;mov		r1,	#6
+	mov		r1,	#1
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b 		finish_player_move
 
 right_7:
@@ -1097,9 +1120,10 @@ left_8:
 	;going left
 	cmp 	r0, #2
 	bne		down_8
-	;mov		r1,	#8
+	mov		r1,	#4
+	bl		adjust_rotation
 	;bl		check_if_valid_move
-	;strb	r1, [r2]
+	strb	r1, [r2]
 	b		finish_player_move
 
 down_8:
@@ -1160,7 +1184,393 @@ right_9:
 	b		finish_player_move
 
 
+; r0 = 1 for up
+; r0 = 2 for left
+; r0 = 4 for down
+; r0 = 8 for right
+adjust_rotation:
+	push	{r1-r2, lr}
+	ldr		r1, ptr_faceDirection
 
+	; check which rotation
+	cmp 	r0, #1
+	beq 	rotate_up
+
+	cmp 	r0, #2
+	beq 	rotate_left
+
+	cmp 	r0, #4
+	beq 	rotate_down
+
+	cmp 	r0, #8
+	beq 	rotate_right
+
+	b		rotate_end
+
+rotate_up:
+	bl		rotate_parallel_sides
+
+
+	ldrb	r2, [r1]	; load 'up' face number
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	strb	r2, [r0]	; set new current face
+
+	ldrb	r4, [r1, #DOWN_OFFSET] ; get current down face
+
+	strb	r3, [r1, #DOWN_OFFSET]	; store current face number on the down direction
+
+
+	ldrb	r2, [r1, #BACK_OFFSET]
+	strb	r2,	[r1]	; set back face to new top face
+	strb	r4, [r1, #BACK_OFFSET]	; store current down to back face
+
+	b		rotate_end
+
+rotate_left:
+	bl		rotate_parallel_sides
+
+	ldrb	r2, [r1, #LEFT_OFFSET]	; load 'left' face number
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	strb	r2, [r0]	; set new current face
+
+	ldrb	r4, [r1, #RIGHT_OFFSET] ; get current right face
+
+	strb	r3, [r1, #RIGHT_OFFSET]	; store current face number on the right direction
+
+
+	ldrb	r2, [r1, #BACK_OFFSET]
+	strb	r2,	[r1, #LEFT_OFFSET]	; set back face to new left face
+	strb	r4, [r1, #BACK_OFFSET]	; store current right to back face
+
+
+	b		rotate_end
+
+rotate_down:
+	bl		rotate_parallel_sides
+
+	ldrb	r2, [r1, #DOWN_OFFSET]	; load 'down' face number
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	strb	r2, [r0]	; set new current face
+
+	ldrb	r4, [r1] 	; get current up face
+
+	strb	r3, [r1]	; store current face number on the up direction
+
+
+	ldrb	r2, [r1, #BACK_OFFSET]
+	strb	r2,	[r1, #DOWN_OFFSET]	; set back face to new down face
+	strb	r4, [r1, #BACK_OFFSET]	; store current up to back face
+
+
+	b		rotate_end
+
+rotate_right:
+	bl		rotate_parallel_sides
+
+
+	ldrb	r2, [r1, #RIGHT_OFFSET]	; load 'right' face number
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	strb	r2, [r0]	; set new current face
+
+	ldrb	r4, [r1, #LEFT_OFFSET] ; get current left face
+
+	strb	r3, [r1, #LEFT_OFFSET]	; store current face number on the left direction
+
+
+	ldrb	r2, [r1, #BACK_OFFSET]
+	strb	r2,	[r1, #RIGHT_OFFSET]	; set back face to new right face
+	strb	r4, [r1, #BACK_OFFSET]	; store current left to back face
+
+
+	b		rotate_end
+
+
+rotate_end:
+	pop {r1-r2, lr}
+ 	mov pc, lr
+
+
+; r0 contains which way the player went
+; r1 contains address of face directions
+rotate_parallel_sides:
+	push	{r0-r4, lr}
+
+	ldr		r2, ptr_blankFace
+
+	cmp		r0, #1
+	beq		parallel_up
+
+	cmp		r0, #2
+	beq		parallel_left
+
+	cmp		r0, #4
+	beq		parallel_down
+
+	cmp		r0, #8
+	beq		parallel_right
+
+	b 		parallel_end
+
+parallel_up:
+	ldrb	r3, [r1, #LEFT_OFFSET]
+	; load value into r3, result comes in r4
+	bl		get_face
+
+	mov 	r1, #0
+pU_left_rotate:
+	; copy face to empty face in updated order
+	ldrb	r3, [r4, r1]
+
+	; update r0 accordingly
+	bl 		decrement_parallel_sides
+
+	strb	r3, [r2, r0]
+
+	add		r1, #1
+	cmp		r1, #8
+	blt		pU_left_rotate	; may need to update
+
+	bl		update_parallel_faces
+
+	ldr		r1, ptr_faceDirection
+	ldrb	r3, [r1, #RIGHT_OFFSET]
+	bl		get_face
+
+	mov		r1, #0
+pU_right_rotate:
+	; copy face to empty face in updated order
+	ldrb	r3, [r4, r1]
+
+	; update r0 accordingly
+	bl 		increment_parallel_sides
+
+	strb	r3, [r2, r0]
+
+	add		r1, #1
+	cmp		r1, #8
+	blt		pU_right_rotate	; may need to update
+
+	bl		update_parallel_faces
+
+	b		parallel_end
+
+parallel_left:
+	ldrb	r3, [r1]
+	; load value into r3, result comes in r4
+	bl		get_face
+
+	mov 	r1, #0
+pL_up_rotate:
+	; copy face to empty face in updated order
+	ldrb	r3, [r4, r1]
+
+	; update r0 accordingly
+	bl 		increment_parallel_sides
+
+	strb	r3, [r2, r0]
+
+	add		r1, #1
+	cmp		r1, #8
+	blt		pL_up_rotate	; may need to update
+
+	bl		update_parallel_faces
+
+	ldr		r1, ptr_faceDirection
+	ldrb	r3, [r1, #DOWN_OFFSET]
+	bl		get_face
+
+	mov		r1, #0
+pL_down_rotate:
+	; copy face to empty face in updated order
+	ldrb	r3, [r4, r1]
+
+	; update r0 accordingly
+	bl 		decrement_parallel_sides
+
+	strb	r3, [r2, r0]
+
+	add		r1, #1
+	cmp		r1, #8
+	blt		pL_down_rotate	; may need to update
+
+	bl		update_parallel_faces
+
+	b		parallel_end
+
+
+
+parallel_down:
+	ldrb	r3, [r1, #LEFT_OFFSET]
+	; load value into r3, result comes in r4
+	bl		get_face
+
+	mov 	r1, #0
+pD_left_rotate:
+	; copy face to empty face in updated order
+	ldrb	r3, [r4, r1]
+
+	; update r0 accordingly
+	bl 		increment_parallel_sides
+
+	strb	r3, [r2, r0]
+
+	add		r1, #1
+	cmp		r1, #8
+	blt		pD_left_rotate	; may need to update
+
+	bl		update_parallel_faces
+
+	ldr		r1, ptr_faceDirection
+	ldrb	r3, [r1, #RIGHT_OFFSET]
+	bl		get_face
+
+	mov		r1, #0
+pD_right_rotate:
+	; copy face to empty face in updated order
+	ldrb	r3, [r4, r1]
+
+	; update r0 accordingly
+	bl 		decrement_parallel_sides
+
+	strb	r3, [r2, r0]
+
+	add		r1, #1
+	cmp		r1, #8
+	blt		pD_right_rotate	; may need to update
+
+	bl		update_parallel_faces
+
+	b		parallel_end
+
+parallel_right:
+	ldrb	r3, [r1]
+	; load value into r3, result comes in r4
+	bl		get_face
+
+	mov 	r1, #0
+pR_up_rotate:
+	; copy face to empty face in updated order
+	ldrb	r3, [r4, r1]
+
+	; update r0 accordingly
+	bl 		decrement_parallel_sides
+
+	strb	r3, [r2, r0]
+
+	add		r1, #1
+	cmp		r1, #8
+	blt		pR_up_rotate	; may need to update
+
+	bl		update_parallel_faces
+
+	ldr		r1, ptr_faceDirection
+	ldrb	r3, [r1, #DOWN_OFFSET]
+	bl		get_face
+
+	mov		r1, #1
+pR_down_rotate:
+	; copy face to empty face in updated order
+	ldrb	r3, [r4, r1]
+
+	; update r0 accordingly
+	bl 		increment_parallel_sides
+
+	strb	r3, [r2, r0]
+
+	add		r1, #1
+	cmp		r1, #8
+	blt		pR_down_rotate	; may need to update
+
+	bl		update_parallel_faces
+
+
+parallel_end:
+
+	pop 	{r0-r4, lr}
+	mov 	pc, lr
+
+
+
+increment_parallel_sides:
+	push	{lr}
+
+	cmp		r1,	#6
+	beq		inc_to_0
+
+	cmp		r1,	#7
+	beq		inc_to_1
+
+	add		r0, r1, #2
+	b 		increment_end
+
+inc_to_0:
+	mov 	r0, #0
+	b 		increment_end
+
+inc_to_1:
+	mov		r0, #1
+
+	b 		increment_end
+
+increment_end:
+	pop 	{lr}
+	mov		pc, lr
+
+
+; zero-index based
+decrement_parallel_sides:
+	push	{lr}
+
+	cmp		r1,	#0
+	beq		dec_to_6
+
+	cmp		r1,	#1
+	beq		dec_to_7
+
+	cmp 	r1, #2
+	beq		dec_to_0
+
+	sub		r0, r1, #2
+	b 		decrement_end
+
+dec_to_6:
+	mov 	r0, #6
+	b 		decrement_end
+
+dec_to_7:
+	mov		r0, #7
+	b 		decrement_end
+
+dec_to_0:
+	mov		r0, #0
+
+decrement_end:
+	pop 	{lr}
+	mov		pc, lr
+
+
+; 	r2 contains empty face
+;	r4 contains actual face
+update_parallel_faces:
+	push 	{r0-r2, r3}
+
+	mov		r0, #0
+copy_face:
+
+	ldrb 	r1, [r2], #1	; load the 'empty' face (contains updated values)
+	strb	r1,	[r4, r0]	; copy to actual face
+
+	add		r0, #1
+	cmp		r0, #8
+	blt		copy_face
+
+update_parallel_faces_done:
+	pop		{r0-r2, r3}
+	mov		pc, lr
 
 
 
@@ -1175,7 +1585,7 @@ check_if_valid_move:
 
 	ldr		r0, ptr_currentFace
 	ldrb	r3, [r0]
-	bl		check_faces ; stores face in r4
+	bl		get_face ; stores face in r4
 
 	ldrb	r3, [r4, r1]
 
