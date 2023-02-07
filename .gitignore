@@ -17,3 +17,4 @@ Debug/tm4c123gh6pm_startup_ccs.obj
 Debug/uart.obj
 .launches/rubicksCube.launch
 .launches/rubicksCube.launch
+Debug/gpio_lib.obj

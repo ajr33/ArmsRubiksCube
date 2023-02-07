@@ -80,6 +80,13 @@ face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
 face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
 face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
 
+rgbRed:			.equ	0x2
+rgbWhite:		.equ	0xE
+rgbPurple:		.equ	0x6
+rgbBlue:		.equ	0x4
+rgbGreen:		.equ	0x8
+rgbYellow:		.equ	0xA
+
 countRed:		.byte	0
 countWhite:		.byte	0
 countPurple:	.byte	0
@@ -121,6 +128,7 @@ playerYellow: 	.string 27 , "[103m    ", 	27, "[40m", 0
 	.global uart_interrupt_init
 	.global UART0_Handler	;yes diff
     .global output_string	;yes same
+    .global	illuminate_RGB_LED
 
 ptr_countRed:		.word	countRed
 ptr_countWhite:		.word	countWhite
@@ -477,31 +485,43 @@ draw_player:
 	b		set_player_red
 
 set_player_red:
+	mov		r0, #rgbRed
+	bl		illuminate_RGB_LED
 	ldr 	r0, ptr_playerRed
 	bl		output_string
 	b		draw_end
 
 set_player_white:
+	mov		r0, #rgbWhite
+	bl		illuminate_RGB_LED
 	ldr 	r0, ptr_playerWhite
 	bl		output_string
 	b		draw_end
 
 set_player_purple:
+	mov		r0, #rgbPurple
+	bl		illuminate_RGB_LED
 	ldr 	r0, ptr_playerPurple
 	bl		output_string
 	b		draw_end
 
 set_player_blue:
+	mov		r0, #rgbBlue
+	bl		illuminate_RGB_LED
 	ldr 	r0, ptr_playerBlue
 	bl		output_string
 	b		draw_end
 
 set_player_green:
+	mov		r0, #rgbGreen
+	bl		illuminate_RGB_LED
 	ldr 	r0, ptr_playerGreen
 	bl		output_string
 	b		draw_end
 
 set_player_yellow:
+	mov		r0, #rgbYellow
+	bl		illuminate_RGB_LED
 	ldr 	r0, ptr_playerYellow
 	bl		output_string
 
@@ -785,6 +805,7 @@ UART0_Handler:
 	cmp		r0, #'W'
 	beq		moveUp
 
+
 	cmp		r0, #'a'
 	beq		moveLeft
 	cmp		r0, #'A'
@@ -880,6 +901,8 @@ swap_color_check:
 	ldrb	r3,	[r2]
 	strb	r0, [r2]
 
+
+
 	mov		r0, #1
 	lsl		r0, r0, r3
 
@@ -895,7 +918,6 @@ actual_end:
 	pop 	{lr}
 
 	BX 		lr       					; Return
-
 
 
 
