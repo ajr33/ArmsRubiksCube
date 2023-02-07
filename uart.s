@@ -73,12 +73,19 @@ face_blue: 		.equ 0x10	; color 4
 face_green:		.equ 0x20	; color 5
 face_yellow:	.equ 0x40	; color 6
 
-face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x2, 0x40
-face2: .byte 0x10, 0x20, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
+face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
+face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
 face3: .byte 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
 face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
 face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
-face6: .byte 0x2, 0x10, 0x20, 0x40, 0x4, 0x20, 0x40, 0x4, 0x40
+face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
+
+countRed:		.byte	0
+countWhite:		.byte	0
+countPurple:	.byte	0
+countBlue:		.byte	0
+countGreen:		.byte	0
+countYellow:	.byte	0
 
 currentFace:	.byte 1
 					;	up, left, down, right, back
@@ -114,6 +121,13 @@ playerYellow: 	.string 27 , "[103m    ", 	27, "[40m", 0
 	.global uart_interrupt_init
 	.global UART0_Handler	;yes diff
     .global output_string	;yes same
+
+ptr_countRed:		.word	countRed
+ptr_countWhite:		.word	countWhite
+ptr_countPurple:	.word	countPurple
+ptr_countBlue:		.word	countBlue
+ptr_countGreen:		.word	countGreen
+ptr_countYellow:	.word	countYellow
 
 ; pointers to player data
 ptr_playerPos: 		.word playerPos
@@ -205,8 +219,111 @@ ptr_board_outline:	.word	board_outline
 U0FR: .equ 0x18		;UART0 Flag Register
 
 
+countColors:
+	push	{r0-r4, lr}
+
+	mov		r1, #0
+
+	;reset all back to 0
+	ldr		r0, ptr_countRed
+	strb	r1,	[r0]
+
+	ldr		r0, ptr_countWhite
+	strb	r1,	[r0]
+
+	ldr		r0, ptr_countPurple
+	strb	r1,	[r0]
+
+	ldr		r0, ptr_countBlue
+	strb	r1,	[r0]
+
+	ldr		r0, ptr_countGreen
+	strb	r1,	[r0]
+
+	ldr		r0, ptr_countYellow
+	strb	r1,	[r0]
 
 
+
+
+	mov		r5, #0
+	ldr		r4, ptr_face1
+incrementColorCount:
+	cmp		r5, #54
+	bge		colorCountEnd
+
+	add		r5, #1
+
+
+	ldrb	r2,	[r4], #1
+
+	cmp 	r2, #face_red
+	beq		incRed
+
+	cmp 	r2, #face_white
+	beq		incWhite
+
+	cmp 	r2, #face_purple
+	beq		incPurple
+
+	cmp 	r2, #face_blue
+	beq		incBlue
+
+	cmp 	r2, #face_green
+	beq		incGreen
+
+	cmp 	r2, #face_yellow
+	beq		incYellow
+
+
+incRed:
+	ldr		r0, ptr_countRed
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+incWhite:
+	ldr		r0, ptr_countWhite
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+incPurple:
+	ldr		r0, ptr_countPurple
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+incBlue:
+	ldr		r0, ptr_countBlue
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+
+incGreen:
+	ldr		r0, ptr_countGreen
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+incYellow:
+	ldr		r0, ptr_countYellow
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+
+
+colorCountEnd:
+	pop 	{r0-r4, lr}
+	mov 	pc, lr
 
 draw_colors:
 	push {r4, lr}
@@ -389,6 +506,7 @@ set_player_yellow:
 	bl		output_string
 
 draw_end:
+	bl		countColors
 	pop 	{r4, lr}  						; Restore lr from stack
 	mov 	pc, lr
 
@@ -1663,7 +1781,7 @@ pR_up_rotate:
 	ldrb	r3, [r1, #DOWN_OFFSET]
 	bl		get_face
 
-	mov		r1, #1
+	mov		r1, #0
 pR_down_rotate:
 	; copy face to empty face in updated order
 	ldrb	r3, [r4, r1]
