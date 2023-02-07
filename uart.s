@@ -640,23 +640,23 @@ UART0_Handler:
 	; saves read character into r0
 	bl 		simple_read_character
 
-	cmp		r0, #'1'
-	beq		toFace1
+	;cmp		r0, #'1'
+	;beq		toFace1
 
-	cmp		r0, #'2'
-	beq		toFace2
+	;cmp		r0, #'2'
+	;beq		toFace2
 
-	cmp		r0, #'3'
-	beq		toFace3
+	;cmp		r0, #'3'
+	;beq		toFace3
 
-	cmp		r0, #'4'
-	beq		toFace4
+	;cmp		r0, #'4'
+	;beq		toFace4
 
-	cmp		r0, #'5'
-	beq		toFace5
+	;cmp		r0, #'5'
+	;beq		toFace5
 
-	cmp		r0, #'6'
-	beq		toFace6
+	;cmp		r0, #'6'
+	;beq		toFace6
 
 
 	cmp 	r0, #' '
@@ -701,40 +701,40 @@ moveRight:
 	b 		update_position
 
 
-toFace1:
-	ldr		r0, ptr_currentFace
-	mov		r1, #1
-	strb	r1, [r0]
-	b		finish_player_move
-
-toFace2:
-	ldr		r0, ptr_currentFace
-	mov		r1, #2
-	strb	r1, [r0]
-	b		finish_player_move
-
-toFace3:
-	ldr		r0, ptr_currentFace
-	mov		r1, #3
-	strb	r1, [r0]
-	b		finish_player_move
-toFace4:
-	ldr		r0, ptr_currentFace
-	mov		r1, #4
-	strb	r1, [r0]
-	b		finish_player_move
-
-toFace5:
-	ldr		r0, ptr_currentFace
-	mov		r1, #5
-	strb	r1, [r0]
-	b		finish_player_move
-
-toFace6:
-	ldr		r0, ptr_currentFace
-	mov		r1, #6
-	strb	r1, [r0]
-	b		finish_player_move
+;toFace1:
+;	ldr		r0, ptr_currentFace
+;	mov		r1, #1
+;	strb	r1, [r0]
+;	b		finish_player_move
+;
+;toFace2:
+;	ldr		r0, ptr_currentFace
+;	mov		r1, #2
+;	strb	r1, [r0]
+;	b		finish_player_move
+;
+;toFace3:
+;	ldr		r0, ptr_currentFace
+;	mov		r1, #3
+;	strb	r1, [r0]
+;	b		finish_player_move
+;toFace4:
+;	ldr		r0, ptr_currentFace
+;	mov		r1, #4
+;	strb	r1, [r0]
+;	b		finish_player_move
+;
+;toFace5:
+;	ldr		r0, ptr_currentFace
+;	mov		r1, #5
+;	strb	r1, [r0]
+;	b		finish_player_move
+;
+;toFace6:
+;	ldr		r0, ptr_currentFace
+;	mov		r1, #6
+;	strb	r1, [r0]
+;	b		finish_player_move
 
 
 
@@ -828,9 +828,15 @@ update_from_1:
 	; going up
 	cmp 	r0, #1
 	bne		left_1
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1]	; up offset
+	bl		get_face	; stored in r4
+
 	mov		r1,	#7
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -838,9 +844,15 @@ left_1:
 	;going left
 	cmp 	r0, #2
 	bne		down_1
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1, #LEFT_OFFSET]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#3
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -848,6 +860,11 @@ down_1:
 	;going down
 	cmp 	r0, #4
 	bne		right_1
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#8
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -857,6 +874,11 @@ right_1:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#2
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -868,9 +890,16 @@ update_from_2:
 	; going up
 	cmp 	r0, #1
 	bne		left_2
+
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1]	; up offset
+	bl		get_face	; stored in r4
+
 	mov		r1,	#6
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -878,6 +907,11 @@ left_2:
 	;going left
 	cmp 	r0, #2
 	bne		down_2
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#1
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -887,6 +921,11 @@ down_2:
 	;going down
 	cmp 	r0, #4
 	bne		right_2
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#9
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -896,6 +935,11 @@ right_2:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#3
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -908,9 +952,15 @@ update_from_3:
 	; going up
 	cmp 	r0, #1
 	bne		left_3
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1]	; up offset
+	bl		get_face	; stored in r4
+
 	mov		r1,	#5
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -918,6 +968,11 @@ left_3:
 	;going left
 	cmp 	r0, #2
 	bne		down_3
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#2
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -927,6 +982,11 @@ down_3:
 	;going down
 	cmp 	r0, #4
 	bne		right_3
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#4
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -936,9 +996,14 @@ right_3:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1, #RIGHT_OFFSET]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#1
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -949,6 +1014,11 @@ update_from_4:
 	; going up
 	cmp 	r0, #1
 	bne		left_4
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#3
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -958,6 +1028,11 @@ left_4:
 	;going left
 	cmp 	r0, #2
 	bne		down_4
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#9
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -967,6 +1042,11 @@ down_4:
 	;going down
 	cmp 	r0, #4
 	bne		right_4
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#5
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -976,9 +1056,15 @@ right_4:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1, #RIGHT_OFFSET]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#8
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -989,6 +1075,11 @@ update_from_5:
 	; going up
 	cmp 	r0, #1
 	bne		left_5
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#4
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -998,6 +1089,11 @@ left_5:
 	;going left
 	cmp 	r0, #2
 	bne		down_5
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#6
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1007,9 +1103,15 @@ down_5:
 	;going down
 	cmp 	r0, #4
 	bne		right_5
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1, #DOWN_OFFSET]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#3
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
+
 	strb	r1, [r2]
 	b 		finish_player_move
 
@@ -1017,9 +1119,15 @@ right_5:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1, #RIGHT_OFFSET]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#7
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -1030,6 +1138,11 @@ update_from_6:
 	; going up
 	cmp 	r0, #1
 	bne		left_6
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#9
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1039,6 +1152,11 @@ left_6:
 	;going left
 	cmp 	r0, #2
 	bne		down_6
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#7
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1048,9 +1166,15 @@ down_6:
 	;going down
 	cmp 	r0, #4
 	bne		right_6
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1, #DOWN_OFFSET]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#2
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
+
 	strb	r1, [r2]
 	b 		finish_player_move
 
@@ -1058,6 +1182,11 @@ right_6:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#5
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1070,6 +1199,11 @@ update_from_7:
 	; going up
 	cmp 	r0, #1
 	bne		left_7
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#8
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1079,9 +1213,15 @@ left_7:
 	;going left
 	cmp 	r0, #2
 	bne		down_7
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1, #LEFT_OFFSET]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#5
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -1089,9 +1229,15 @@ down_7:
 	;going down
 	cmp 	r0, #4
 	bne		right_7
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1, #DOWN_OFFSET]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#1
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
+
 	strb	r1, [r2]
 	b 		finish_player_move
 
@@ -1099,6 +1245,11 @@ right_7:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#6
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1111,6 +1262,11 @@ update_from_8:
 	; going up
 	cmp 	r0, #1
 	bne		left_8
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#1
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1120,9 +1276,15 @@ left_8:
 	;going left
 	cmp 	r0, #2
 	bne		down_8
+
+	ldr		r1,	ptr_faceDirection
+	ldrb	r3, [r1, #LEFT_OFFSET]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#4
+	bl		check_if_valid_move
 	bl		adjust_rotation
-	;bl		check_if_valid_move
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -1130,6 +1292,11 @@ down_8:
 	;going down
 	cmp 	r0, #4
 	bne		right_8
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#7
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1139,6 +1306,11 @@ right_8:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#9
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1151,6 +1323,11 @@ update_from_9:
 	; going up
 	cmp 	r0, #1
 	bne		left_9
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#2
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1160,6 +1337,11 @@ left_9:
 	;going left
 	cmp 	r0, #2
 	bne		down_9
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#8
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1169,6 +1351,11 @@ down_9:
 	;going down
 	cmp 	r0, #4
 	bne		right_9
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#6
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1178,6 +1365,11 @@ right_9:
 	;going right
 	cmp 	r0, #8
 	bne		actual_end
+
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
 	mov		r1,	#4
 	bl		check_if_valid_move
 	strb	r1, [r2]
@@ -1575,7 +1767,7 @@ update_parallel_faces_done:
 
 
 check_if_valid_move:
-	push 	{r2, lr}
+	push 	{r0, r2, lr}
 	; r1 should store the square the player wants to go to and the square that should be checked if it is valid
 	sub 	r1, #1	;for indexing sub by 1
 
@@ -1583,9 +1775,11 @@ check_if_valid_move:
 	ldr 	r0, ptr_playerColor
 	ldrb	r2, [r0]
 
-	ldr		r0, ptr_currentFace
-	ldrb	r3, [r0]
-	bl		get_face ; stores face in r4
+	;ldr		r0, ptr_currentFace
+	;ldrb	r3, [r0]
+	;bl		get_face ; stores face in r4
+
+; r4 should already have face to check against loaded
 
 	ldrb	r3, [r4, r1]
 
@@ -1594,15 +1788,17 @@ check_if_valid_move:
 	lsl 	r0, r0, r2
 
 
-	pop 	{r2, lr}
+
 
 	cmp		r0, r3
 	bne		is_valid
+	pop 	{r0, r2, lr}
 	b		finish_player_move
 
 
 is_valid:
 	add		r1, #1
+	pop 	{r0, r2, lr}
 	mov		pc, lr
 
 
