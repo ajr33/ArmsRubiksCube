@@ -107,7 +107,7 @@ BACK_OFFSET:	.equ	4
 
 ; Player data
 playerPos: 		.byte 9
-playerColor:	.byte 1
+playerColor:	.byte 1 ; 1-red, 2-white, 3-purple, 4-blue, 5-green, 6-yellow
 
 
 ; Colors for player
@@ -1701,7 +1701,7 @@ pL_up_rotate:
 	ldrb	r3, [r4, r1]
 
 	; update r0 accordingly
-	bl 		increment_parallel_sides
+	bl 		decrement_parallel_sides
 
 	strb	r3, [r2, r0]
 
@@ -1721,7 +1721,7 @@ pL_down_rotate:
 	ldrb	r3, [r4, r1]
 
 	; update r0 accordingly
-	bl 		decrement_parallel_sides
+	bl 		increment_parallel_sides
 
 	strb	r3, [r2, r0]
 
@@ -1789,7 +1789,7 @@ pR_up_rotate:
 	ldrb	r3, [r4, r1]
 
 	; update r0 accordingly
-	bl 		decrement_parallel_sides
+	bl 		increment_parallel_sides
 
 	strb	r3, [r2, r0]
 
@@ -1809,7 +1809,7 @@ pR_down_rotate:
 	ldrb	r3, [r4, r1]
 
 	; update r0 accordingly
-	bl 		increment_parallel_sides
+	bl 		decrement_parallel_sides
 
 	strb	r3, [r2, r0]
 
