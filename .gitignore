@@ -18,3 +18,4 @@ Debug/uart.obj
 .launches/rubicksCube.launch
 .launches/rubicksCube.launch
 Debug/gpio_lib.obj
+*.obj

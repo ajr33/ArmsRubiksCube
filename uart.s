@@ -1,5 +1,9 @@
 	.data
 
+
+menu_message: 	.string 0xC, 0xA, 0xD, "Press any key to start", 0xA, 0xD, 0
+
+
 board_outline: 	.string 0xC, 27, "[?25h" , 27, "[37;40m"
 				.string "----------------------", 0xA, 0xD
                 .string "|      |      |      |", 0xA, 0xD
@@ -129,6 +133,12 @@ playerYellow: 	.string 27 , "[103m    ", 	27, "[40m", 0
 	.global UART0_Handler	;yes diff
     .global output_string	;yes same
     .global	illuminate_RGB_LED
+    .global	draw_colors
+    .global	draw_peek
+
+
+;menu
+ptr_menu_message: 	.word 	menu_message
 
 ptr_countRed:		.word	countRed
 ptr_countWhite:		.word	countWhite
@@ -333,6 +343,73 @@ colorCountEnd:
 	pop 	{r0-r4, lr}
 	mov 	pc, lr
 
+
+draw_peek:
+	push	{r4, lr}
+
+	; face should be loaded into r3
+	bl		get_face
+	; face pointer is now in r4
+
+	; goto location of grid 1
+	ldr 	r0, ptr_grid1
+	bl 		output_string
+	ldrb 	r0, [r4], #1
+	bl 		get_color
+	bl 		output_string
+
+	ldr 	r0, ptr_grid2
+	bl 		output_string
+	ldrb 	r0, [r4], #1
+	bl 		get_color
+	bl 		output_string
+
+	ldr 	r0, ptr_grid3
+	bl 		output_string
+	ldrb 	r0, [r4], #1
+	bl 		get_color
+	bl 		output_string
+
+	ldr 	r0, ptr_grid4
+	bl 		output_string
+	ldrb 	r0, [r4], #1
+	bl 		get_color
+	bl 		output_string
+
+	ldr 	r0, ptr_grid5
+	bl 		output_string
+	ldrb 	r0, [r4], #1
+	bl 		get_color
+	bl 		output_string
+
+	ldr 	r0, ptr_grid6
+	bl 		output_string
+	ldrb 	r0, [r4], #1
+	bl 		get_color
+	bl 		output_string
+
+	ldr 	r0, ptr_grid7
+	bl 		output_string
+	ldrb 	r0, [r4], #1
+	bl 		get_color
+	bl 		output_string
+
+	ldr 	r0, ptr_grid8
+	bl 		output_string
+	ldrb 	r0, [r4], #1
+	bl 		get_color
+	bl 		output_string
+
+	ldr 	r0, ptr_grid9
+	bl 		output_string
+	ldrb 	r0, [r4], #1
+	bl 		get_color
+	bl 		output_string
+
+
+
+	pop		{r4, lr}
+	mov 	pc, lr
 draw_colors:
 	push {r4, lr}
 
@@ -526,7 +603,7 @@ set_player_yellow:
 	bl		output_string
 
 draw_end:
-	bl		countColors
+	;bl		countColors
 	pop 	{r4, lr}  						; Restore lr from stack
 	mov 	pc, lr
 
@@ -696,13 +773,19 @@ uart_init:
 	bl		uart_interrupt_init
 	; Pop used registers from stack
 
+	ldr 	r0, ptr_menu_message
+	bl 		output_string
 
-
+wait_for_key:
+	bl		simple_read_character
+	cmp 	r0, #0
+	beq		wait_for_key
 
 	; Draw the board outline
 	ldr 	r0, ptr_board_outline
 	bl		output_string
 
+	bl 		scramble_cube
 	bl 		draw_colors
 
 
@@ -711,6 +794,235 @@ uart_init:
 	pop 	{lr}  						; Restore lr from stack
 	mov 	pc, lr
 
+
+scramble_cube:
+	mov r0, #0
+	ldr r1, ptr_face1
+
+    ; Load address of timer 1 counter. Uses register GPTMTAV (0x050) which shows the free running value
+    ; of Timer 1A. This will be used with the modulus formula as a random number generator. Timer is always
+    ; running
+    movw    r6, #0x1050
+    MOVT    r6, #0x4003
+    mov 	r4, #6
+
+	; get mod of 6 from timer
+    ldr 	r2, [r6] ; load timer1 current value
+    add		r2, #3
+    udiv 	r3, r2, r4 ; floor of timer value/6
+    mul		r3, r3, r4	; closest value to timer value without going over
+    sub		r5, r2, r3	; mod value
+
+
+
+
+	; load current face
+	ldr 	r1, ptr_currentFace
+	ldrb	r2, [r1]	; r2 now has the current face.
+
+	; check if current face = the face to set.
+	cmp 	r2, r5
+	beq		set_face_end	; face is already set done.
+
+	cmp 	r5, #1
+	beq		set_face1
+
+	cmp 	r5, #2
+	beq		set_face2
+
+	cmp 	r5, #3
+	beq		set_face3
+
+	cmp 	r5, #4
+	beq		set_face4
+
+	cmp 	r5, #5
+	beq		set_face5
+
+    b		set_face6
+
+set_face1:
+	mov 	r0, #1
+	strb	r0, [r1]
+	b 		replace_old_face
+
+set_face2:
+	mov 	r0, #2
+	strb	r0, [r1]
+	b 		replace_old_face
+
+set_face3:
+	mov 	r0, #3
+	strb	r0, [r1]
+	b 		replace_old_face
+
+set_face4:
+	mov 	r0, #4
+	strb	r0, [r1]
+	b 		replace_old_face
+
+set_face5:
+	mov 	r0, #5
+	strb	r0, [r1]
+	b 		replace_old_face
+
+set_face6:
+	mov 	r0, #6
+	strb	r0, [r1]
+
+replace_old_face:
+	ldr		r4, ptr_faceDirection
+	mov 	r3, #0
+checkForFace:
+	ldrb 	r1, [r4, r3]
+	add		r3, #1
+
+	; if checked all end (should never branch)
+	cmp 	r3, #4
+	bgt		set_face_end
+
+	cmp		r0, r1
+	bne		checkForFace
+
+	; replace face with the previous current face
+	sub		r3, #1
+	strb	r2, [r4, r3]
+
+
+set_face_end:
+	mov		pc, lr
+
+
+
+
+
+try_scramble_red:
+ 	cmp 	r5, #0
+    bne		try_scramble_white
+
+	ldr		r3, ptr_countRed
+	ldrb	r2, [r3]
+	cmp		r2, #9
+	itte	ge
+	movge	r5, #1
+	bge		try_scramble_white
+	blt		set_red
+
+
+try_scramble_white:
+    cmp 	r5, #1
+   	bne		try_scramble_purple
+
+	ldr		r3, ptr_countWhite
+	ldrb	r2, [r3]
+	cmp		r2, #9
+	itte	ge
+	movge	r5, #2
+	bge		try_scramble_purple
+	blt		set_white
+
+
+
+try_scramble_purple:
+    cmp 	r5, #2
+   	bne		try_scramble_blue
+
+	ldr		r3, ptr_countPurple
+	ldrb	r2, [r3]
+	cmp		r2, #9
+	itte	ge
+	movge	r5, #3
+	bge		try_scramble_blue
+	blt		set_purple
+
+try_scramble_blue:
+ 	cmp 	r5, #3
+   	bne		try_scramble_green
+
+	ldr		r3, ptr_countBlue
+	ldrb	r2, [r3]
+	cmp		r2, #9
+	itte	ge
+	movge	r5, #4
+	bge		try_scramble_green
+	blt		set_blue
+
+try_scramble_green:
+	cmp 	r5, #4
+   	bne		try_scramble_yellow
+
+	ldr		r3, ptr_countGreen
+	ldrb	r2, [r3]
+	cmp		r2, #9
+	itte	ge
+	movge	r5, #5
+	bge		try_scramble_yellow
+	blt		set_green
+
+try_scramble_yellow:
+	cmp 	r5, #5
+   	bne		stop_scrambling
+
+	ldr		r3, ptr_countYellow
+	ldrb	r2, [r3]
+	cmp		r2, #9
+	itte	ge
+	movge	r5, #0
+	bge		try_scramble_red
+	blt		set_yellow
+
+    b stop_scrambling
+
+
+set_red:
+	add 	r2, #1
+	strb	r2, [r3]
+	mov 	r2, #face_red
+	b		set_scramble_color
+
+set_white:
+	add 	r2, #1
+	strb	r2, [r3]
+	mov 	r2, #face_white
+	b		set_scramble_color
+
+set_purple:
+	add 	r2, #1
+	strb	r2, [r3]
+	mov 	r2, #face_purple
+	b		set_scramble_color
+
+set_blue:
+	add 	r2, #1
+	strb	r2, [r3]
+	mov 	r2, #face_blue
+	b		set_scramble_color
+
+set_green:
+	add 	r2, #1
+	strb	r2, [r3]
+	mov 	r2, #face_green
+	b		set_scramble_color
+
+set_yellow:
+	add 	r2, #1
+	strb	r2, [r3]
+	mov 	r2, #face_yellow
+
+
+set_scramble_color:
+	nop
+	nop
+	strb 	r2, [r1], #1
+	add 	r0, #1
+	nop
+	nop
+
+	cmp 	r0, #54
+	;blt 	keep_scrambling
+
+stop_scrambling:
+	mov pc, lr
 
 
 
@@ -723,7 +1035,7 @@ uart_interrupt_init:
 	push 	{r4, r5}
 
 	;ldr 	r1, ptr_to_shared_ptr
-	str		r0, [r1]
+	;str		r0, [r1]
 
 	; Set the Receive Interrupt bit (RXIM - bit 5) in UART Interrupt mask register. Other
 	; bits in register may have already been set, so we load value and use or to set mask bit.
@@ -778,23 +1090,18 @@ UART0_Handler:
 	; saves read character into r0
 	bl 		simple_read_character
 
-	;cmp		r0, #'1'
-	;beq		toFace1
+	; r9 has pointer to game state from cube.s
+	ldrb	r1, [r9]
 
-	;cmp		r0, #'2'
-	;beq		toFace2
+	; set to started if game not started.
+	cmp 	r1, #0
+	itt		eq
+	moveq	r1, #1
+	beq		store_game_state
 
-	;cmp		r0, #'3'
-	;beq		toFace3
-
-	;cmp		r0, #'4'
-	;beq		toFace4
-
-	;cmp		r0, #'5'
-	;beq		toFace5
-
-	;cmp		r0, #'6'
-	;beq		toFace6
+	; if peeking, don't do anything so player cannot move.
+	cmp		r1, #1
+	bgt		actual_end
 
 
 	cmp 	r0, #' '
@@ -804,7 +1111,6 @@ UART0_Handler:
 	beq		moveUp
 	cmp		r0, #'W'
 	beq		moveUp
-
 
 	cmp		r0, #'a'
 	beq		moveLeft
@@ -821,7 +1127,68 @@ UART0_Handler:
 	cmp		r0, #'D'
 	beq		moveRight
 
+	ldr		r2, ptr_faceDirection
+	; Peeks
+	cmp		r0, #'z'
+	beq		peekLeft
+	cmp		r0, #'Z'
+	beq		peekLeft
+
+
+	cmp		r0, #'x'
+	beq		peekUp
+	cmp		r0, #'X'
+	beq		peekUp
+
+
+	cmp		r0, #'c'
+	beq		peekDown
+	cmp		r0, #'C'
+	beq		peekDown
+
+
+	cmp		r0, #'v'
+	beq		peekRight
+	cmp		r0, #'V'
+	beq		peekRight
+
 	b		actual_end	;if anything else end...
+
+
+	; r7 is address for peekData in cube.s
+
+peekLeft:
+	ldrb	r0, [r2, #1] ; r2 should have pointer to face directions
+	strb	r0, [r7]
+	;bl 		draw_peek
+	b		actual_end
+
+
+peekUp:
+	ldrb	r0, [r2] ; r2 should have pointer to face directions
+	strb	r0, [r7]
+	;bl 		draw_peek
+	b		actual_end
+
+
+peekDown:
+	ldrb	r0, [r2, #2] ; r2 should have pointer to face directions
+	strb	r0, [r7]
+	;bl 		draw_peek
+	b		actual_end
+
+peekRight:
+	ldrb	r0, [r2, #3] ; r2 should have pointer to face directions
+	strb	r0, [r7]
+	;bl 		draw_peek
+	b		actual_end
+
+
+
+
+store_game_state:
+	strb 	r1, [r9]
+	b		actual_end
 
 moveUp:
 	mov 	r0, #1
@@ -907,6 +1274,7 @@ swap_color_check:
 	lsl		r0, r0, r3
 
 	strb	r0,	[r4, r1] ; store player color on sqaure
+
 
 
 finish_player_move:
