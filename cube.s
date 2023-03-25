@@ -1,23 +1,36 @@
 	.data
-game_state:		.byte 0	; 	0 - not started
-						;	1 - started (no peek)
-						;	2 - peeking
-						;	3 - waiting for timer to reset
+game_state:		.byte 0	; 	0 	- not started
+						;	1 	- started (no peek)
+						;	2 	- peeking
+						;	3 	- waiting for timer to reset
+						;	4 	- won
+						;	5	- quit
 
 peekData: 		.byte 0 ; 0 - none, Otherwise - face to peek
+
+
+quit_message:	.string 0xC
+				.string 0xA, 0xD, "Quitting...", 0
+
 	.text
 
 	.global cubeGame
+	.global output_string
 	.global timer1_init
 	.global uart_init
 	.global gpio_interrupt_init
+	.global	quit_game
 
 ;game state
 ptr_gameState:		.word 	game_state
 ptr_peekData:		.word	peekData
 
+;quit messag
+ptr_quit_message:	.word	quit_message
 
 cubeGame:
+	push	{lr}
+
 	ldr		r7, ptr_peekData
 	ldr		r9, ptr_gameState
 
@@ -41,6 +54,11 @@ cubeGame:
 
 
 cubeGameLoop:
+	;check for quit
+	ldrb	r0, [r9]
+	cmp		r0, #5
+	beq		quit_game
+
 	; check peek data
 	ldrb 	r0, [r7]
 	cmp		r0, #0
@@ -68,16 +86,13 @@ waitForPeek:
 	strb	r0, [r8]
 
 
-
-
-
 	b cubeGameLoop
 
+quit_game:
+	ldr		r0, ptr_quit_message
+	bl		output_string
+	pop		{lr}
+	mov		pc, lr
 
 
-
-
-
-
-
-
+	.end

@@ -1,7 +1,19 @@
 	.data
 
 
-menu_message: 	.string 0xC, 0xA, 0xD, "Press any key to start", 0xA, 0xD, 0
+menu_message: 	.string 0xC
+				.string 0xA, 0xD, "Welcome to Arms Rubiks cube."
+				.string 0xA, 0xD
+				.string 0xA, 0xD, "CONTROLS: "
+				.string 0xA, 0xD, "Use W, A, S, D to move up, left down and right respectively."
+				.string 0xA, 0xD, "Use the keys Z, X, C, V to peek left, up, down, and right respectively for one second."
+				.string 0xA, 0xD, "Use the SPACEBAR to change to the color your currently on."
+				.string 0xA, 0xD
+				.string 0xA, 0xD
+				.string 0xA, 0xD, "You cannot move onto a square that has your current color."
+				.string 0xA, 0xD, "The tiva board will display your current color via the RGB LED."
+				.string 0xA, 0xD
+				.string 0xA, 0xD, "Press any key to start", 0xA, 0xD, 0
 
 
 board_outline: 	.string 0xC, 27, "[?25h" , 27, "[37;40m"
@@ -19,6 +31,10 @@ board_outline: 	.string 0xC, 27, "[?25h" , 27, "[37;40m"
                 .string "|      |      |      |", 0xA, 0xD
                 .string "|------|------|------|", 0xA, 0xD, 0
 
+win_message:	.string 0xC
+				.string 0xA, 0xD, "Congratulations, you have solved the Arm Rubiks Cube."
+				.string 0xA, 0xD
+				.string 0xA, 0xD, "Press SPACE to play again. Q to quit." , 0
 ; Colors to draw
 ;						color string	cursor down cursor back
 red: 		.string 27, "[41m      ", 27, "[1B", 27, "[6D"
@@ -76,6 +92,13 @@ face_purple: 	.equ 0x8	; color 3
 face_blue: 		.equ 0x10	; color 4
 face_green:		.equ 0x20	; color 5
 face_yellow:	.equ 0x40	; color 6
+
+reset_face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
+reset_face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
+reset_face3: .byte 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
+reset_face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
+reset_face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
+reset_face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
 
 face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
 face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
@@ -135,10 +158,14 @@ playerYellow: 	.string 27 , "[103m    ", 	27, "[40m", 0
     .global	illuminate_RGB_LED
     .global	draw_colors
     .global	draw_peek
+    .global	quit_game
 
 
 ;menu
 ptr_menu_message: 	.word 	menu_message
+
+;win screen
+ptr_win_message:	.word	win_message
 
 ptr_countRed:		.word	countRed
 ptr_countWhite:		.word	countWhite
@@ -174,6 +201,16 @@ ptr_playerYellow:	.word playerYellow
 ptr_currentFace:	.word currentFace
 ptr_faceDirection:	.word faceDirection
 ptr_blankFace:		.word blankFace
+
+;for reset
+ptr_reset_face1:	.word reset_face1
+ptr_reset_face2:	.word reset_face2
+ptr_reset_face3:	.word reset_face3
+ptr_reset_face4:	.word reset_face4
+ptr_reset_face5:	.word reset_face5
+ptr_reset_face6:	.word reset_face6
+
+
 ptr_face1:	.word face1
 ptr_face2:	.word face2
 ptr_face3:	.word face3
@@ -235,6 +272,7 @@ ptr_middle9:	.word middle_nine
 ptr_board_outline:	.word	board_outline
 
 U0FR: .equ 0x18		;UART0 Flag Register
+
 
 
 countColors:
@@ -776,10 +814,28 @@ uart_init:
 	ldr 	r0, ptr_menu_message
 	bl 		output_string
 
-wait_for_key:
+wait_for_space:
 	bl		simple_read_character
 	cmp 	r0, #0
-	beq		wait_for_key
+	beq		wait_for_space
+
+	bl		restart_game
+
+	pop 	{r0, r4, r5}
+
+	pop 	{lr}  						; Restore lr from stack
+	mov 	pc, lr
+
+
+
+restart_game:
+	push	{lr}
+	; set the game state
+	mov		r0, #1
+	strb	r0, [r9]
+
+	; copy reset faces to faces
+	bl		copy_reset_faces
 
 	; Draw the board outline
 	ldr 	r0, ptr_board_outline
@@ -788,11 +844,26 @@ wait_for_key:
 	bl 		scramble_cube
 	bl 		draw_colors
 
+	pop		{lr}
+	mov		pc, lr
 
-	pop 	{r0, r4, r5}
 
-	pop 	{lr}  						; Restore lr from stack
-	mov 	pc, lr
+
+copy_reset_faces:
+	mov		r0, #0	;counter
+
+	ldr 	r2, ptr_reset_face1
+	ldr		r3, ptr_face1
+
+reset_square_color:
+	ldrb	r1, [r2], #1 	; color to reset to
+	strb	r1, [r3], #1	; storing color
+	add		r0, #1
+	cmp		r0, #54
+	blt		reset_square_color
+
+	mov		pc, lr
+
 
 
 scramble_cube:
@@ -878,7 +949,7 @@ checkForFace:
 	add		r3, #1
 
 	; if checked all end (should never branch)
-	cmp 	r3, #4
+	cmp 	r3, #5
 	bgt		set_face_end
 
 	cmp		r0, r1
@@ -1099,13 +1170,22 @@ UART0_Handler:
 	moveq	r1, #1
 	beq		store_game_state
 
+	cmp		r1, #4
+	beq		check_key
+
 	; if peeking, don't do anything so player cannot move.
 	cmp		r1, #1
 	bgt		actual_end
 
-
+check_key:
 	cmp 	r0, #' '
 	beq		pickColor
+
+	cmp		r0, #'q'
+	beq		quit_rubiks
+	cmp		r0, #'Q'
+	beq		quit_rubiks
+
 
 	cmp		r0, #'w'
 	beq		moveUp
@@ -1207,45 +1287,17 @@ moveRight:
 	b 		update_position
 
 
-;toFace1:
-;	ldr		r0, ptr_currentFace
-;	mov		r1, #1
-;	strb	r1, [r0]
-;	b		finish_player_move
-;
-;toFace2:
-;	ldr		r0, ptr_currentFace
-;	mov		r1, #2
-;	strb	r1, [r0]
-;	b		finish_player_move
-;
-;toFace3:
-;	ldr		r0, ptr_currentFace
-;	mov		r1, #3
-;	strb	r1, [r0]
-;	b		finish_player_move
-;toFace4:
-;	ldr		r0, ptr_currentFace
-;	mov		r1, #4
-;	strb	r1, [r0]
-;	b		finish_player_move
-;
-;toFace5:
-;	ldr		r0, ptr_currentFace
-;	mov		r1, #5
-;	strb	r1, [r0]
-;	b		finish_player_move
-;
-;toFace6:
-;	ldr		r0, ptr_currentFace
-;	mov		r1, #6
-;	strb	r1, [r0]
-;	b		finish_player_move
 
 
 
 pickColor:
+	; check if the player won the game and wants to replay.
+	cmp		r1, #4
+	bne		no_replay
+	bl		restart_game
+	b		actual_end
 
+no_replay:
 	ldr		r0, ptr_playerPos
 	ldrb	r1,	[r0]
 	sub		r1, #1
@@ -1275,12 +1327,26 @@ swap_color_check:
 
 	strb	r0,	[r4, r1] ; store player color on sqaure
 
+	mov 	r4, #0x5A	; load random value to check
+
 
 
 finish_player_move:
 	bl draw_colors
+	; only check for wins on color switch
+	cmp		r4, #0x5A
+	it		eq
+	bleq	check_win
+	b		actual_end
+
+quit_rubiks:
+	cmp 	r1, #4
+	bne		actual_end
+	mov		r0, #5
+	strb	r0, [r9]
 
 actual_end:
+
 	; Restore registers
 	pop 	{r4-r11}
 	pop 	{lr}
@@ -1288,7 +1354,46 @@ actual_end:
 	BX 		lr       					; Return
 
 
+check_win:
+	push 	{r0, r1, lr}
+	mov		r0, #0 ;counter for number of sides
+	ldr 	r6, ptr_face1
 
+load_first_color:
+	add		r0, #1
+	cmp		r0, #6
+	bgt		has_won
+	; load the first color
+	ldrb	r4, [r6], #1
+	mov		r1, #1	;set counter for number of squares
+	b		check_matches
+
+has_won:
+	; win logic here
+	mov		r0, #4
+	strb	r0, [r9] ; store win state
+
+	; show win message
+	ldr		r0, ptr_win_message
+	bl		output_string
+	b 		end_win_check
+
+check_matches:
+	; if checked each of the sqaures of this face,
+	; load the next face
+	cmp 	r1, #9
+	beq		load_first_color
+
+	add		r1, #1	; increment counter
+
+	ldrb	r5, [r6], #1
+	cmp 	r4, r5
+	beq		check_matches
+
+
+end_win_check:
+	pop		{r0, r1, lr}
+	mov		pc, lr
 
 ; Update the position in memory of the player
 update_position:
