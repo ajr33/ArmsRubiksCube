@@ -1,3 +1,20 @@
+	.data
+
+;the gameclock
+game_time:		.word	0
+print_time:		.word	0, 0
+
+;rgb data after winning
+rgb_data:	.byte	2 	; 2 - red
+					  	; 4 - blue
+					  	; 6 - purple
+					  	; 8 - green
+					  	; A - yellow
+					  	; C - cyan
+					  	; E - white
+
+
+
 	.text
 
     .global GameClock_Handler	;yes diff
@@ -6,6 +23,30 @@
 	.global timer1_init				;yes same as above
 	.global draw_colors
 	.global	draw_peek
+	.global output_string	;yes same
+    .global int2string
+    .global	reset_game_clock
+    .global illuminate_RGB_LED
+    .global show_player_time
+
+;rgb constants
+rgbRed:			.equ	0x2
+rgbWhite:		.equ	0xE
+rgbPurple:		.equ	0x6
+rgbBlue:		.equ	0x4
+rgbGreen:		.equ	0x8
+rgbYellow:		.equ	0xA
+
+; time location on screen
+timePosition:		.string 27, "[15;7H", 0
+ptr_timePosition:	.word timePosition
+
+; raw time in memory
+ptr_game_time:		.word	game_time
+ptr_print_time:		.word	print_time
+
+;rgb data
+ptr_rgb:			.word	rgb_data
 
 
 ;TIMER OFFSETS
@@ -225,6 +266,32 @@ Timer_Handler:
 	cmp		r0, #0
 	beq		Timer_Handler_return
 
+	;if game has quit or is paused, return
+	cmp		r0, #5
+	bge		Timer_Handler_return
+
+	; game won, return
+	cmp		r0, #4
+	beq		rgb_win
+
+
+	push 	{r0}
+	;increment game clock
+	ldr		r0, ptr_timePosition
+	bl		output_string
+
+	ldr		r1, ptr_game_time
+	ldr		r0, [r1]
+	add		r0, #1			;increment the gameclock by 1
+	str		r0, [r1]
+	ldr		r1, ptr_print_time
+	bl		int2string
+	mov		r0, r1
+	bl		output_string
+
+	pop		{r0}
+
+
 	cmp 	r0, #2
 	beq		stop_peeking
 
@@ -246,6 +313,74 @@ can_start_peek:
 	bl		draw_peek
 	mov		r0, #2
 	strb	r0, [r9]
+	b		Timer_Handler_return
+
+
+
+; 2 - red
+					  	; 4 - blue
+					  	; 6 - purple
+					  	; 8 - green
+					  	; A - yellow
+					  	; C - cyan
+					  	; E - white
+
+
+
+rgb_win:
+	ldr		r1, ptr_rgb
+	ldrb	r0, [r1]
+	bl		illuminate_RGB_LED
+
+	cmp		r0, #0x2
+	beq		win_blue
+
+	cmp		r0, #0x4
+	beq		win_purple
+
+
+	cmp		r0, #0x6
+	beq		win_green
+
+
+	cmp		r0, #0x8
+	beq		win_yellow
+
+
+	cmp		r0, #0xA
+	beq		win_white
+
+	;win_red
+	mov		r0, #0x2
+	strb	r0, [r1]
+	b		Timer_Handler_return
+
+
+win_blue:
+	mov		r0, #0x4
+	strb	r0, [r1]
+	b		Timer_Handler_return
+
+win_purple:
+	mov		r0, #0x6
+	strb	r0, [r1]
+	b		Timer_Handler_return
+
+win_green:
+	mov		r0, #0x8
+	strb	r0, [r1]
+	b		Timer_Handler_return
+
+win_yellow:
+	mov		r0, #0xA
+	strb	r0, [r1]
+	b		Timer_Handler_return
+
+win_white:
+	mov		r0, #0xE
+	strb	r0, [r1]
+	b		Timer_Handler_return
+
 
 Timer_Handler_return:
     ; Regardless, need to update score and time on board
@@ -254,6 +389,24 @@ Timer_Handler_return:
     pop     {r4-r11, lr}
     bx      lr
 
+reset_game_clock:
+	mov		r0, #0
+	ldr		r1, ptr_game_time
+	str		r0, [r1]
+	mov		pc, lr
+
+show_player_time:
+	push 	{lr}
+	; go to position on screen
+	ldr		r0, ptr_timePosition
+	bl		output_string
+
+	; show the time that the player won at
+	ldr		r0, ptr_print_time
+	bl		output_string
+
+	pop		{lr}
+	mov		pc, lr
 
 
     .end

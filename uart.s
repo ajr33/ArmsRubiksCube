@@ -9,14 +9,18 @@ menu_message: 	.string 0xC
 				.string 0xA, 0xD, "Use the keys Z, X, C, V to peek left, up, down, and right respectively for one second."
 				.string 0xA, 0xD, "Use the SPACEBAR to change to the color your currently on."
 				.string 0xA, 0xD
+				.string 0xA, 0xD, "Press TAB to pause the game."
+				.string 0xA, 0xD
 				.string 0xA, 0xD
 				.string 0xA, 0xD, "You cannot move onto a square that has your current color."
 				.string 0xA, 0xD, "The tiva board will display your current color via the RGB LED."
 				.string 0xA, 0xD
-				.string 0xA, 0xD, "Press any key to start", 0xA, 0xD, 0
+				.string 0xA, 0xD, "In this version of the game, there will be an extra red."
+				.string 0xA, 0xD
+				.string 0xA, 0xD, "Press any key to start.", 0xA, 0xD, 0
 
 
-board_outline: 	.string 0xC, 27, "[?25h" , 27, "[37;40m"
+board_outline: 	.string 0xC, 27, "[?25l" , 27, "[37;40m"
 				.string "----------------------", 0xA, 0xD
                 .string "|      |      |      |", 0xA, 0xD
                 .string "|      |      |      |", 0xA, 0xD
@@ -29,12 +33,26 @@ board_outline: 	.string 0xC, 27, "[?25h" , 27, "[37;40m"
                 .string "|      |      |      |", 0xA, 0xD
                 .string "|      |      |      |", 0xA, 0xD
                 .string "|      |      |      |", 0xA, 0xD
-                .string "|------|------|------|", 0xA, 0xD, 0
+                .string "|------|------|------|", 0xA, 0xD
+                .string 0xA, 0xD
+time_moves:     .string 27, "[15;1HTime: 0      Moves: 0   ",0
+
+
+;the number of moves made
+game_moves:		.word	0
+;string that holds the number of moves made
+print_moves:	.word 	0, 0
+
 
 win_message:	.string 0xC
 				.string 0xA, 0xD, "Congratulations, you have solved the Arm Rubiks Cube."
 				.string 0xA, 0xD
-				.string 0xA, 0xD, "Press SPACE to play again. Q to quit." , 0
+				.string 0xA, 0xD, "Press SPACE to play again. Q to quit." , 0xA, 0xD, 0x7, 0 ; 0x7 sounds the bell, indicating that you have won.
+
+pause_menu:		.string 0xC
+				.string 0xA, 0xD, "PAUSED"
+				.string 0xA, 0xD, "Press 'TAB' to unpause, 'P' to restart or 'Q' to quit.", 0
+
 ; Colors to draw
 ;						color string	cursor down cursor back
 red: 		.string 27, "[41m      ", 27, "[1B", 27, "[6D"
@@ -93,19 +111,40 @@ face_blue: 		.equ 0x10	; color 4
 face_green:		.equ 0x20	; color 5
 face_yellow:	.equ 0x40	; color 6
 
-reset_face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
-reset_face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
-reset_face3: .byte 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
-reset_face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
-reset_face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
-reset_face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
 
-face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
-face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
-face3: .byte 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
-face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
-face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
-face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
+; These match each face with the same color for testing endgame stuff.
+
+reset_face1: .byte 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2
+reset_face2: .byte 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4
+reset_face3: .byte 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8
+reset_face4: .byte 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10
+reset_face5: .byte 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20
+reset_face6: .byte 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40
+
+face1: .byte 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2
+face2: .byte 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4
+face3: .byte 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8
+face4: .byte 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10
+face5: .byte 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20
+face6: .byte 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40
+
+
+
+;reset_face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
+;reset_face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
+;reset_face3: .byte 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
+;reset_face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
+;reset_face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
+;reset_face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
+
+
+;face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
+;face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
+;face3: .byte 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
+;face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
+;face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
+;face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
+
 
 rgbRed:			.equ	0x2
 rgbWhite:		.equ	0xE
@@ -132,6 +171,8 @@ DOWN_OFFSET:	.equ	2
 RIGHT_OFFSET:	.equ	3
 BACK_OFFSET:	.equ	4
 
+TAB:			.equ	9
+
 ; Player data
 playerPos: 		.byte 9
 playerColor:	.byte 1 ; 1-red, 2-white, 3-purple, 4-blue, 5-green, 6-yellow
@@ -155,10 +196,14 @@ playerYellow: 	.string 27 , "[103m    ", 	27, "[40m", 0
 	.global uart_interrupt_init
 	.global UART0_Handler	;yes diff
     .global output_string	;yes same
+    .global int2string
     .global	illuminate_RGB_LED
     .global	draw_colors
     .global	draw_peek
     .global	quit_game
+    .global reset_game_clock
+    .global show_player_time
+
 
 
 ;menu
@@ -166,6 +211,11 @@ ptr_menu_message: 	.word 	menu_message
 
 ;win screen
 ptr_win_message:	.word	win_message
+
+;pause menu
+ptr_pause_menu:		.word	pause_menu
+
+ptr_time_moves:		.word	time_moves
 
 ptr_countRed:		.word	countRed
 ptr_countWhite:		.word	countWhite
@@ -240,9 +290,10 @@ middle_seven:     .string 27, "[11;3H",0
 middle_eight:     .string 27, "[7;3H",0
 middle_nine:      .string 27, "[7;10H",0
 
+movesPosition:		.string 27, "[15;21H", 0
 
-
-
+ptr_game_moves:		.word	game_moves
+ptr_print_moves:	.word	print_moves
 
 
 ptr_grid1:	.word grid_one
@@ -267,6 +318,10 @@ ptr_middle6:	.word middle_six
 ptr_middle7:	.word middle_seven
 ptr_middle8:	.word middle_eight
 ptr_middle9:	.word middle_nine
+
+
+
+ptr_movesPosition:	.word movesPosition
 
 
 ptr_board_outline:	.word	board_outline
@@ -837,6 +892,21 @@ restart_game:
 	; copy reset faces to faces
 	bl		copy_reset_faces
 
+	; set number of moves to 0
+	mov		r0, #0
+	ldr 	r1, ptr_game_moves
+	str		r0, [r1]
+
+	; set player position to the middle square
+	mov		r0, #9
+	ldr		r1,	ptr_playerPos
+	strb	r0, [r1]
+
+	; set player color back to red
+	mov		r0, #1
+	ldr		r1,	ptr_playerColor
+	strb	r0, [r1]
+
 	; Draw the board outline
 	ldr 	r0, ptr_board_outline
 	bl		output_string
@@ -1164,6 +1234,9 @@ UART0_Handler:
 	; r9 has pointer to game state from cube.s
 	ldrb	r1, [r9]
 
+	cmp		r1, #6
+	beq		check_pause_actions
+
 	; set to started if game not started.
 	cmp 	r1, #0
 	itt		eq
@@ -1174,10 +1247,17 @@ UART0_Handler:
 	beq		check_key
 
 	; if peeking, don't do anything so player cannot move.
-	cmp		r1, #1
-	bgt		actual_end
+	cmp		r1, #2
+	beq		actual_end
+	cmp		r1, #3
+	beq		actual_end
 
 check_key:
+
+	;pause the game
+	cmp		r0, #TAB
+	beq		pause_game
+
 	cmp 	r0, #' '
 	beq		pickColor
 
@@ -1231,6 +1311,8 @@ check_key:
 	beq		peekRight
 	cmp		r0, #'V'
 	beq		peekRight
+
+
 
 	b		actual_end	;if anything else end...
 
@@ -1332,11 +1414,78 @@ swap_color_check:
 
 
 finish_player_move:
-	bl draw_colors
+	bl 		draw_colors
+	; update move count
+	ldr		r0, ptr_movesPosition
+	bl		output_string
+
+	ldr		r1, ptr_game_moves
+	ldr		r0, [r1]
+	add		r0, #1
+	str		r0, [r1]
+	ldr		r1, ptr_print_moves
+	bl		int2string
+	mov		r0, r1
+	bl		output_string
+
 	; only check for wins on color switch
 	cmp		r4, #0x5A
 	it		eq
 	bleq	check_win
+	b		actual_end
+
+
+check_pause_actions:
+	cmp		r0, #TAB
+	beq		pause_game
+
+	cmp		r0, #'p'
+	beq		restart_from_pause
+	cmp		r0, #'P'
+	beq		restart_from_pause
+
+	cmp		r0, #'q'
+	beq		quit_from_pause
+	cmp		r0, #'Q'
+	beq		quit_from_pause
+
+
+restart_from_pause:
+	bl		reset_game_clock
+	bl		restart_game
+	b		actual_end
+
+quit_from_pause:
+	; set 'quit' state
+	mov		r0, #5
+	strb	r0, [r9]
+	b		actual_end
+
+pause_game:
+	; check if game is already paused or not
+	cmp		r1, #6 ; if paused, unpause
+	beq		unpause_game
+
+	; pause the game
+	mov		r0, #6
+	strb	r0, [r9]
+
+	; show pause menu
+	ldr		r0, ptr_pause_menu
+	bl		output_string
+
+	b		actual_end
+
+unpause_game:
+	; restore normal 'started' state
+	mov		r0, #1
+	strb	r0, [r9]
+
+	; Redraw the board outline
+	ldr 	r0, ptr_board_outline
+	bl		output_string
+	bl 		draw_colors
+
 	b		actual_end
 
 quit_rubiks:
@@ -1376,6 +1525,22 @@ has_won:
 	; show win message
 	ldr		r0, ptr_win_message
 	bl		output_string
+
+	; show move count
+	ldr		r0, ptr_time_moves
+	bl		output_string
+
+	; go to move location on screen
+	ldr		r0, ptr_movesPosition
+	bl		output_string
+
+	; output the number of moves made.
+	ldr		r0, ptr_print_moves
+	bl		output_string
+
+	; show the player time
+	bl		show_player_time
+
 	b 		end_win_check
 
 check_matches:

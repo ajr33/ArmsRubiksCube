@@ -5,12 +5,13 @@ game_state:		.byte 0	; 	0 	- not started
 						;	3 	- waiting for timer to reset
 						;	4 	- won
 						;	5	- quit
+						;	6 	- paused
 
 peekData: 		.byte 0 ; 0 - none, Otherwise - face to peek
 
 
 quit_message:	.string 0xC
-				.string 0xA, 0xD, "Quitting...", 0
+				.string 0xA, 0xD, "Quitting...", 0x7, 0
 
 	.text
 
@@ -20,12 +21,13 @@ quit_message:	.string 0xC
 	.global uart_init
 	.global gpio_interrupt_init
 	.global	quit_game
+	.global illuminate_RGB_LED
 
 ;game state
 ptr_gameState:		.word 	game_state
 ptr_peekData:		.word	peekData
 
-;quit messag
+;quit message
 ptr_quit_message:	.word	quit_message
 
 cubeGame:
@@ -91,6 +93,11 @@ waitForPeek:
 quit_game:
 	ldr		r0, ptr_quit_message
 	bl		output_string
+
+	; turn off the rgb led upon quitting.
+	mov		r0, #0
+	bl		illuminate_RGB_LED
+
 	pop		{lr}
 	mov		pc, lr
 
