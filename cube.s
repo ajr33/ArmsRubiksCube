@@ -6,6 +6,11 @@ game_state:		.byte 0	; 	0 	- not started
 						;	4 	- won
 						;	5	- quit
 						;	6 	- paused
+						;	7	- rotating face 2
+						;	8	- rotating face 1
+						;	9	- waiting for timer 0 for rotation 2
+
+addr_rotation:	.word	0
 
 peekData: 		.byte 0 ; 0 - none, Otherwise - face to peek
 
@@ -17,15 +22,19 @@ quit_message:	.string 0xC
 
 	.global cubeGame
 	.global output_string
+	.global	timer0_init
 	.global timer1_init
 	.global uart_init
 	.global gpio_interrupt_init
 	.global	quit_game
 	.global illuminate_RGB_LED
+	.global pick_second_rotation
 
 ;game state
 ptr_gameState:		.word 	game_state
 ptr_peekData:		.word	peekData
+
+ptr_addr_rotation:	.word	addr_rotation
 
 ;quit message
 ptr_quit_message:	.word	quit_message
@@ -34,10 +43,12 @@ cubeGame:
 	push	{lr}
 
 	ldr		r7, ptr_peekData
+	ldr		r8, ptr_addr_rotation
 	ldr		r9, ptr_gameState
 
 	; Initialize peripherals
-	bl 	timer1_init
+	bl		timer0_init
+	bl 		timer1_init
 
 
 	;set r1 to timer 1 base address
@@ -60,6 +71,22 @@ cubeGameLoop:
 	ldrb	r0, [r9]
 	cmp		r0, #5
 	beq		quit_game
+
+; wait for timer to interrupt and process code.
+; use r5 since it has the blank face filled.
+wait_for_rotation1:
+	ldrb	r0, [r9]
+	cmp		r0, #8
+	beq		wait_for_rotation1
+
+	cmp		r0, #7
+	it		eq
+	bleq	pick_second_rotation
+
+wait_for_rotation2:
+	ldrb	r0, [r9]
+	cmp		r0, #7
+	beq		wait_for_rotation2
 
 	; check peek data
 	ldrb 	r0, [r7]
@@ -85,7 +112,6 @@ waitForPeek:
 	; is peeking here, so reset
 	mov r0, #0
 	strb	r0, [r7]
-	strb	r0, [r8]
 
 
 	b cubeGameLoop

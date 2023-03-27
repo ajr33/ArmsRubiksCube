@@ -53,6 +53,9 @@ pause_menu:		.string 0xC
 				.string 0xA, 0xD, "PAUSED"
 				.string 0xA, 0xD, "Press 'TAB' to unpause, 'P' to restart or 'Q' to quit.", 0
 
+rotationSelect:			.byte 0 ; 0	- none
+								; 1 - counter-clockwise
+								; 2 - clockwise
 ; Colors to draw
 ;						color string	cursor down cursor back
 red: 		.string 27, "[41m      ", 27, "[1B", 27, "[6D"
@@ -202,7 +205,8 @@ playerYellow: 	.string 27 , "[103m    ", 	27, "[40m", 0
     .global	quit_game
     .global reset_game_clock
     .global show_player_time
-
+	.global start_drawing
+	.global pick_second_rotation
 
 
 ;menu
@@ -223,6 +227,7 @@ ptr_countBlue:		.word	countBlue
 ptr_countGreen:		.word	countGreen
 ptr_countYellow:	.word	countYellow
 
+ptr_rotationSelect:	.word	rotationSelect
 ; pointers to player data
 ptr_playerPos: 		.word playerPos
 ptr_playerColor:	.word playerColor
@@ -248,7 +253,7 @@ ptr_playerYellow:	.word playerYellow
 
 ; pointers to faces
 ptr_currentFace:	.word currentFace
-ptr_faceDirection:	.word faceDirection
+
 ptr_blankFace:		.word blankFace
 
 ;for reset
@@ -429,11 +434,46 @@ incYellow:
 	strb	r3, [r0]
 	b		incrementColorCount
 
-
-
 colorCountEnd:
 	pop 	{r0-r4, lr}
 	mov 	pc, lr
+
+check_if_valid_move:
+	push 	{r0, r2, lr}
+	; r1 should store the square the player wants to go to and the square that should be checked if it is valid
+	sub 	r1, #1	;for indexing sub by 1
+
+	; get the player's current color
+	ldr 	r0, ptr_playerColor
+	ldrb	r2, [r0]
+
+	;ldr		r0, ptr_currentFace
+	;ldrb	r3, [r0]
+	;bl		get_face ; stores face in r4
+
+; r4 should already have face to check against loaded
+
+	ldrb	r3, [r4, r1]
+
+	; shift left by player's color
+	mov 	r0, #1
+	lsl 	r0, r0, r2
+
+
+
+
+	cmp		r0, r3
+	bne		is_valid
+	pop 	{r0, r2, lr}
+	b		finish_player_move
+
+
+is_valid:
+	add		r1, #1
+	pop 	{r0, r2, lr}
+	mov		pc, lr
+
+
 
 
 draw_peek:
@@ -513,6 +553,7 @@ draw_colors:
 
 
 start_drawing:
+	push 	{lr}
 	; goto location of grid 1
 	ldr 	r0, ptr_grid1
 	bl 		output_string
@@ -567,6 +608,12 @@ start_drawing:
 	ldrb 	r0, [r4], #1
 	bl 		get_color
 	bl 		output_string
+
+	pop		{lr}
+
+	ldrb	r0, [r9]
+	cmp		r0, #7
+	bge		rotation_return
 
 	; draw player location
 	ldr		r0,	ptr_playerPos
@@ -697,7 +744,10 @@ set_player_yellow:
 draw_end:
 	;bl		countColors
 	pop 	{r4, lr}  						; Restore lr from stack
+rotation_return:
 	mov 	pc, lr
+
+
 
 
 ; will save found color into r0
@@ -1260,6 +1310,16 @@ check_key:
 	cmp 	r0, #' '
 	beq		pickColor
 
+	cmp		r0, #'m'
+	beq		clockwise_rotation
+	cmp		r0, #'M'
+	beq		clockwise_rotation
+
+	cmp		r0, #'n'
+	beq		counterclockwise_rotation
+	cmp		r0, #'N'
+	beq		counterclockwise_rotation
+
 	cmp		r0, #'q'
 	beq		quit_rubiks
 	cmp		r0, #'Q'
@@ -1500,6 +1560,250 @@ actual_end:
 	pop 	{lr}
 
 	BX 		lr       					; Return
+
+
+pick_second_rotation:
+	push	{lr}
+
+	ldr 	r1, ptr_rotationSelect
+	ldrb	r0, [r1]
+
+	cmp		r0, #1
+	beq		counterclockwise_rotation
+
+	cmp		r0, #2
+	beq		clockwise_rotation
+
+	pop		{lr}
+	mov		pc, lr
+
+
+
+clockwise_rotation:
+	push	{lr}
+
+	;store rotation
+	ldr		r1, ptr_rotationSelect
+	mov		r0, #2
+	strb	r0, [r1]
+
+	; get the current face
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
+	ldr		r5, ptr_blankFace
+
+	mov 	r3, #0	;offset counter
+
+	;check state
+	ldrb	r1, [r9]
+
+	cmp		r1, #1
+	beq		cw_first_rotation
+
+	cmp		r1, #7
+	beq		cw_second_rotation
+
+	b		cw_face_rotation1_end
+
+cw_first_rotation:
+	mov		r0, #8
+	strb	r0, [r9]
+
+cw_first_turn:
+	ldrb	r0, [r4, r3]
+	add		r3, #1
+	strb	r0, [r5, r3]
+
+	cmp		r3, #7
+	blt		cw_first_turn
+
+	; sqaure 8 case
+	ldrb	r0, [r4, #7]
+	strb	r0, [r5]
+
+	;square 9 is the same
+	ldrb	r0, [r4, #8]
+	strb	r0, [r5, #8]
+
+	;save into addr_rotation from cube.s
+	str		r5, [r8]
+
+	b		cw_face_rotation1_end
+
+
+cw_second_rotation:
+
+	mov		r0, #1
+	strb	r0, [r9]
+cw_second_turn:
+	ldrb	r0, [r4, r3]
+	add		r3, #2
+	strb	r0, [r5, r3]
+
+	sub		r3, #1
+	cmp		r3, #6
+	blt		cw_second_turn
+
+	; square 7 case
+	ldrb	r0, [r4, #6]
+	strb	r0, [r5]
+
+	; sqaure 8 case
+	ldrb	r0, [r4, #7]
+	strb	r0, [r5, #1]
+
+	;square 9 is the same
+	ldrb	r0, [r4, #8]
+	strb	r0, [r5, #8]
+
+	;save into addr_rotation from cube.s
+	str		r5, [r8]
+
+	; save the blank face as the real face.
+	mov		r0, #0
+cw_saveToCurrentFace:
+	ldrb	r1, [r5], #1
+	strb	r1, [r4], #1
+	add		r0, #1
+	cmp		r0, #9
+	blt		cw_saveToCurrentFace
+
+	; save state
+	mov		r0, #9
+	strb	r0, [r9]
+
+	; reset rotation
+	ldr		r1, ptr_rotationSelect
+	mov		r0, #0
+	strb	r0, [r1]
+
+
+	pop		{lr}
+	mov		pc, lr
+
+cw_face_rotation1_end:
+	pop 	{lr}
+	b		actual_end
+
+
+
+counterclockwise_rotation:
+	push	{lr}
+
+	;store rotation
+	ldr		r1, ptr_rotationSelect
+	mov		r0, #1
+	strb	r0, [r1]
+
+	; get the current face
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
+	ldr		r5, ptr_blankFace
+
+	mov 	r3, #7	;offset counter
+
+	;check state
+	ldrb	r1, [r9]
+
+	cmp		r1, #1
+	beq		ccw_first_rotation
+
+	cmp		r1, #7
+	beq		ccw_second_rotation
+
+	b		ccw_face_rotation1_end
+
+ccw_first_rotation:
+	mov		r0, #8
+	strb	r0, [r9]
+
+ccw_first_turn:
+	ldrb	r0, [r4, r3]
+	sub		r3, #1
+	strb	r0, [r5, r3]
+
+	cmp		r3, #0
+	bgt		ccw_first_turn
+
+	; sqaure 1 case
+	ldrb	r0, [r4]
+	strb	r0, [r5, #7]
+
+	;square 9 is the same
+	ldrb	r0, [r4, #8]
+	strb	r0, [r5, #8]
+
+	;save into addr_rotation from cube.s
+	str		r5, [r8]
+
+	b		ccw_face_rotation1_end
+
+
+ccw_second_rotation:
+
+	mov		r0, #1
+	strb	r0, [r9]
+ccw_second_turn:
+	ldrb	r0, [r4, r3]
+	sub		r3, #2
+	strb	r0, [r5, r3]
+
+	add		r3, #1
+	cmp		r3, #1
+	bgt		ccw_second_turn
+
+	; square 2 case
+	ldrb	r0, [r4, #1]
+	strb	r0, [r5, #7]
+
+	; sqaure 1 case
+	ldrb	r0, [r4]
+	strb	r0, [r5, #6]
+
+	;square 9 is the same
+	ldrb	r0, [r4, #8]
+	strb	r0, [r5, #8]
+
+	;save into addr_rotation from cube.s
+	str		r5, [r8]
+
+	; save the blank face as the real face.
+	mov		r0, #0
+ccw_saveToCurrentFace:
+	ldrb	r1, [r5], #1
+	strb	r1, [r4], #1
+	add		r0, #1
+	cmp		r0, #9
+	blt		ccw_saveToCurrentFace
+
+	; save state
+	mov		r0, #9
+	strb	r0, [r9]
+
+	; reset rotation
+	ldr		r1, ptr_rotationSelect
+	mov		r0, #0
+	strb	r0, [r1]
+
+	pop		{lr}
+	mov		pc, lr
+
+ccw_face_rotation1_end:
+	pop 	{lr}
+	b		actual_end
+
+
+
+
+
+
+
+
+
 
 
 check_win:
@@ -2262,6 +2566,10 @@ rotate_end:
 	pop {r1-r2, lr}
  	mov pc, lr
 
+; NOTE: FOR SPACE OF INSTRUCTIONS THIS POINTER NEEDS TO BE CLOSE TO
+;		INSTRUCTIONS THAT USE IT. HENCE WHY IT IS DOWN SO FAR IN THE TEXT.
+ptr_faceDirection:	.word faceDirection
+
 
 ; r0 contains which way the player went
 ; r1 contains address of face directions
@@ -2543,40 +2851,6 @@ update_parallel_faces_done:
 
 
 
-check_if_valid_move:
-	push 	{r0, r2, lr}
-	; r1 should store the square the player wants to go to and the square that should be checked if it is valid
-	sub 	r1, #1	;for indexing sub by 1
-
-	; get the player's current color
-	ldr 	r0, ptr_playerColor
-	ldrb	r2, [r0]
-
-	;ldr		r0, ptr_currentFace
-	;ldrb	r3, [r0]
-	;bl		get_face ; stores face in r4
-
-; r4 should already have face to check against loaded
-
-	ldrb	r3, [r4, r1]
-
-	; shift left by player's color
-	mov 	r0, #1
-	lsl 	r0, r0, r2
-
-
-
-
-	cmp		r0, r3
-	bne		is_valid
-	pop 	{r0, r2, lr}
-	b		finish_player_move
-
-
-is_valid:
-	add		r1, #1
-	pop 	{r0, r2, lr}
-	mov		pc, lr
 
 
 

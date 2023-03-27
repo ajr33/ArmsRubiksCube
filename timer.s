@@ -18,8 +18,9 @@ rgb_data:	.byte	2 	; 2 - red
 	.text
 
     .global GameClock_Handler	;yes diff
-    .global Timer_Handler		;yes diff
-    .global timer0_interrupt_init	;yes same
+    .global Timer0_Handler
+    .global Timer1_Handler		;yes diff
+    .global timer0_init	;yes same
 	.global timer1_init				;yes same as above
 	.global draw_colors
 	.global	draw_peek
@@ -28,6 +29,7 @@ rgb_data:	.byte	2 	; 2 - red
     .global	reset_game_clock
     .global illuminate_RGB_LED
     .global show_player_time
+    .global start_drawing
 
 ;rgb constants
 rgbRed:			.equ	0x2
@@ -78,7 +80,7 @@ EN0: 		    .equ 0x100	            ;NVIC Interrupt Enable Register
 ; REMINDER: Push used registers r4-r11 to stack if used *PUSH/POP {r4, r5} or PUSH/POP {r4-r11})
 ; REMINDER: If calling another function from inside, PUSH/POP {lr}. To return from function MOV pc, lr
 ;***************************************************************************************************
-timer0_interrupt_init:
+timer0_init:
 	PUSH    {lr}
 
 
@@ -138,6 +140,14 @@ timer0_interrupt_init:
 	LDR     r0, [r1, #EN0]
 	ORR     r0, r0, #0x80000		    ;set timer 0 to be able to interrupt processor
 	STR     r0, [r1, #EN0]
+
+	;set r1 to timer 0 base address
+	MOV     r1, #0x0000
+	MOVT    r1, #0x4003
+	;start timer
+	LDRB    r0, [r1, #0xC]
+	ORR     r0, r0, #0x3		        ; set bit 0 to 1, set bit 1 to 1 to allow debugger to stop timer
+	STRB    r0, [r1, #0xC]            	; enable timer 0 (A) for use
 
 	POP     {lr}
 	MOV     pc, lr
@@ -229,8 +239,53 @@ timer1_init:
 	MOV     pc, lr
 
 
+Timer0_Handler:
+    push    {r4-r11, lr}
+
+    ;CLEAR INTERRUPT
+	;load timer 1 base address
+	MOV     r1, #0x0000
+	MOVT    r1, #0x4003
+
+	;set 1 to clear the interrupt
+	LDR     r0, [r1, #GPTMICR]
+	ORR     r0, r0, #0x01
+	STR     r0, [r1, #GPTMICR]
+
+	; check if we should rotate the face or not
+	ldrb	r0, [r9]
+
+	cmp		r0, #9
+	beq		rotate_2
+
+	cmp		r0, #8
+	beq		rotate_1
+
+	b		timer0_end
+
+rotate_2:
+	; load the face to draw into r4
+	ldr		r4, [r8]
+	bl 		start_drawing
+	; reset game state
+	mov		r0, #1
+	strb	r0, [r9]
+	b		timer0_end
+
+rotate_1:
+	; load the face to draw into r4
+	ldr		r4, [r8]
+	bl 		start_drawing
+	; set game state for second rotation
+	mov		r0, #7
+	strb	r0, [r9]
+
+timer0_end:
+	pop    {r4-r11, lr}
+	bx		lr
+
 ;***************************************************************************************************
-; Function name: Timer_Handler
+; Function name: Timer1_Handler
 ; Function behavior: Main gameplay loop. Updates the board state based on the direction variable.
 ; Uses remaining board spaces and score to determine if game is ended and whether game was won/lost.
 ;
@@ -247,7 +302,7 @@ timer1_init:
 ; REMINDER: Push used registers r4-r11 to stack if used *PUSH/POP {r4, r5} or PUSH/POP {r4-r11})
 ; REMINDER: If calling another function from inside, PUSH/POP {lr}. To return from function MOV pc, lr
 ;***************************************************************************************************
-Timer_Handler:
+Timer1_Handler:
     push    {r4-r11, lr}
 
     ;CLEAR INTERRUPT
