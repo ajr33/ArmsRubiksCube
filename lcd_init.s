@@ -55,11 +55,11 @@ lcd_cmd:
 	pop		{r0}
 	lsl		r0, #4 			; move the lower nibble up to the upper nibble to send
 	bl		send_lcd_cmd
-	
+
 	; delay to give lcd time to read lower nibble
 	mov		r0, #1000
 	bl		delay_us
-	
+
 
 	pop		{lr}
 
@@ -84,8 +84,8 @@ lcd_data:
 	pop		{r0}
 	lsl		r0, #4			; move the lower nibble up to the upper nibble to send
 	bl		send_lcd_data
-	
-	
+
+
 	; delay to give lcd time to read lower nibble
 	mov		r0, #1000
 	bl		delay_us
@@ -419,7 +419,9 @@ lcd_init:
 	bl		delay_us
 
 	; 4 bit mode
-	mov		r0, #0x2
+	mov		r0, #0x33
+	bl		lcd_cmd
+	mov		r0, #0x32
 	bl		lcd_cmd
 
 	; 2 lines and 5x8 dots
