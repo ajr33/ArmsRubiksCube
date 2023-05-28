@@ -448,11 +448,15 @@ lcd_cmd_init:
 	; display command - display on; no cursor blinking
 	mov		r0, #0xe
 	bl		lcd_cmd
-
+	
+	; you can move these two lines towards the end to test printing characters to the lcd
 	pop		{lr}
 	mov		pc, lr
 
-
+	; these lines of code are for testing characters printing 
+	; to the screen. we can omit them in actual initialization code.
+	; but nice to have to make sure that the initialization is done
+	; correctly.
 	mov		r0, #'H'
 	bl		lcd_data
 
