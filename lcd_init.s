@@ -8,7 +8,7 @@
 ;
 ;
 ;
-;	U10
+;	U6
 ;		SER 	= PB7
 ;		RCLK	= PC6
 ;		SRCLK 	= PB4
