@@ -29,7 +29,15 @@ rgb_data:	.byte	2 	; 2 - red
     .global	reset_game_clock
     .global illuminate_RGB_LED
     .global show_player_time
-    .global start_drawing
+    .global draw_colors
+    .global animate_rotation
+
+	.global		lcd_cmd
+	.global		lcd_data
+	.global 	lcd_show_pause
+	.global		clear_lcd
+	.global		lcd_line_2
+	.global		lcd_print_string
 
 ;rgb constants
 rgbRed:			.equ	0x2
@@ -252,6 +260,16 @@ Timer0_Handler:
 	ORR     r0, r0, #0x01
 	STR     r0, [r1, #GPTMICR]
 
+	; if rotation needs to happen
+	ldrb	r0, [r5]	; r5 holds address of rotation state of the cube (from cube.s)
+	cmp		r0, #0
+	itt		ne
+	blne	animate_rotation
+	bne		timer0_end
+
+	b		timer0_end
+
+
 	; check if we should rotate the face or not
 	ldrb	r0, [r9]
 
@@ -266,7 +284,7 @@ Timer0_Handler:
 rotate_2:
 	; load the face to draw into r4
 	ldr		r4, [r8]
-	bl 		start_drawing
+	bl 		draw_colors
 	; reset game state
 	mov		r0, #1
 	strb	r0, [r9]
@@ -275,7 +293,7 @@ rotate_2:
 rotate_1:
 	; load the face to draw into r4
 	ldr		r4, [r8]
-	bl 		start_drawing
+	bl 		draw_colors
 	; set game state for second rotation
 	mov		r0, #7
 	strb	r0, [r9]
@@ -325,12 +343,12 @@ Timer1_Handler:
 	cmp		r0, #5
 	bge		Timer_Handler_return
 
+
 	; game won, return
 	cmp		r0, #4
 	beq		rgb_win
 
 
-	push 	{r0}
 	;increment game clock
 	ldr		r0, ptr_timePosition
 	bl		output_string
@@ -341,19 +359,23 @@ Timer1_Handler:
 	str		r0, [r1]
 	ldr		r1, ptr_print_time
 	bl		int2string
+
 	mov		r0, r1
+;	push	{r0}
 	bl		output_string
+;	pop		{r0}
 
-	pop		{r0}
-
-
-	cmp 	r0, #2
-	beq		stop_peeking
-
-	cmp		r0, #3
-	beq 	can_start_peek
+;	mov		r1, #0x13		; row 2 column 3 start printing
+;	bl		lcd_print_string
 
 	b		Timer_Handler_return
+
+
+
+
+
+
+
 
 stop_peeking:
 	mov 	r0, #1
@@ -444,6 +466,12 @@ Timer_Handler_return:
     pop     {r4-r11, lr}
     bx      lr
 
+
+
+
+
+
+
 reset_game_clock:
 	mov		r0, #0
 	ldr		r1, ptr_game_time
@@ -459,6 +487,8 @@ show_player_time:
 	; show the time that the player won at
 	ldr		r0, ptr_print_time
 	bl		output_string
+
+
 
 	pop		{lr}
 	mov		pc, lr

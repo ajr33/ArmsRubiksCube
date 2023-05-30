@@ -5,6 +5,7 @@
 
 	.global illuminate_RGB_LED		;yes same
     .global gpio_interrupt_init		;yes same
+    .global Switch_Handler
 
 ;GPIO Register OFFSETS
 DIR: .equ 0x400		;port direction register
@@ -122,6 +123,9 @@ gpio_interrupt_init:
 	POP 	{lr}
 	MOV 	pc, lr
 
+
+
+Switch_Handler:
 
 
 
