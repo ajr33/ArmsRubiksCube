@@ -2,6 +2,7 @@
 
 
 menu_message: 	.string 0xC
+
 				.string 0xA, 0xD, "Welcome to Arms Rubiks cube."
 				.string 0xA, 0xD
 				.string 0xA, 0xD, "CONTROLS: "
@@ -53,6 +54,11 @@ pause_menu:		.string 0xC
 				.string 0xA, 0xD, "PAUSED"
 				.string 0xA, 0xD, "Press 'TAB' to unpause, 'P' to restart or 'Q' to quit.", 0
 
+rotationSelect:			.byte 0 ; 0	- none
+								; 1 - counter-clockwise
+								; 2 - clockwise
+
+rotation_playerPos:		.byte 9
 ; Colors to draw
 ;						color string	cursor down cursor back
 red: 		.string 27, "[41m      ", 27, "[1B", 27, "[6D"
@@ -114,35 +120,35 @@ face_yellow:	.equ 0x40	; color 6
 
 ; These match each face with the same color for testing endgame stuff.
 
-;reset_face1: .byte 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2
-;reset_face2: .byte 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4
-;reset_face3: .byte 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8
-;reset_face4: .byte 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10
-;reset_face5: .byte 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20
-;reset_face6: .byte 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40
+reset_face1: .byte 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2
+reset_face2: .byte 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4
+reset_face3: .byte 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8
+reset_face4: .byte 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10
+reset_face5: .byte 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20
+reset_face6: .byte 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40
 
-;face1: .byte 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2
-;face2: .byte 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4
-;face3: .byte 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8
-;face4: .byte 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10
-;face5: .byte 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20
-;face6: .byte 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40
-
-
-reset_face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
-reset_face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
-reset_face3: .byte 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
-reset_face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
-reset_face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
-reset_face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
+face1: .byte 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2
+face2: .byte 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4
+face3: .byte 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8
+face4: .byte 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10
+face5: .byte 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20
+face6: .byte 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40
 
 
-face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
-face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
-face3: .byte 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
-face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
-face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
-face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
+;reset_face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
+;reset_face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
+;reset_face3: .byte 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
+;reset_face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
+;reset_face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
+;reset_face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
+
+
+;face1: .byte 0x2, 0x40, 0x8, 0x2, 0x4, 0x40, 0x10, 0x20, 0x40
+;face2: .byte 0x10, 0x40, 0x8, 0x2, 0x4, 0x8, 0x2, 0x20, 0x10
+;face3: .byte 0x8, 0x4, 0x8, 0x20, 0x4, 0x4, 0x8, 0x20, 0x4
+;face4: .byte 0x20, 0x40, 0x10, 0x2, 0x4, 0x10, 0x10, 0x20, 0x40
+;face5: .byte 0x2, 0x8, 0x8, 0x2, 0x10, 0x40, 0x10, 0x20, 0x8
+;face6: .byte 0x2, 0x10, 0x20, 0x2, 0x4, 0x20, 0x40, 0x4, 0x40
 
 
 rgbRed:			.equ	0x2
@@ -165,6 +171,7 @@ faceDirection:	.byte 	5,	4,	6,	2, 3
 
 blankFace:		.byte	0, 0, 0, 0, 0, 0, 0, 0, 0
 
+; UP_OFFSET is 0.
 LEFT_OFFSET:	.equ	1
 DOWN_OFFSET:	.equ	2
 RIGHT_OFFSET:	.equ	3
@@ -187,7 +194,10 @@ playerYellow: 	.string 27 , "[103m    ", 	27, "[40m", 0
 
 
 
+fill_rotation_face:		.byte 	0, 0, 0, 0, 0, 0, 0, 0, 0
+animation_face:			.word	0
 
+movesPlacement:		.equ	0x16
 
 	.text
 
@@ -202,6 +212,30 @@ playerYellow: 	.string 27 , "[103m    ", 	27, "[40m", 0
     .global	quit_game
     .global reset_game_clock
     .global show_player_time
+	.global draw_colors
+	.global pick_second_rotation
+	.global animate_rotation
+	.global get_face
+	.global	show_home_screen
+	.global delay_us
+
+	; rotation sequences
+	.global	rotLeftSeq
+	.global	rotUpSeq
+	.global	rotRightSeq
+	.global	rotDownSeq
+
+	; lcd
+	.global		lcd_show_home
+	.global 	lcd_show_pause
+	.global		lcd_show_win
+	.global		lcd_data
+	.global		lcd_cmd
+	.global 	clear_lcd
+	.global 	lcd_print_string
+	.global		move_lcd_cursor
+	.global		lcd_print_time_and_moves
+	.global		lcd_clear_top
 
 
 
@@ -222,6 +256,9 @@ ptr_countPurple:	.word	countPurple
 ptr_countBlue:		.word	countBlue
 ptr_countGreen:		.word	countGreen
 ptr_countYellow:	.word	countYellow
+
+ptr_rotationSelect:		.word	rotationSelect
+ptr_rotation_playerPos:	.word	rotation_playerPos
 
 ; pointers to player data
 ptr_playerPos: 		.word playerPos
@@ -246,10 +283,9 @@ ptr_playerYellow:	.word playerYellow
 
 
 
-; pointers to faces
-ptr_currentFace:	.word currentFace
-ptr_faceDirection:	.word faceDirection
-ptr_blankFace:		.word blankFace
+
+
+
 
 ;for reset
 ptr_reset_face1:	.word reset_face1
@@ -266,6 +302,10 @@ ptr_face3:	.word face3
 ptr_face4:	.word face4
 ptr_face5:	.word face5
 ptr_face6:	.word face6
+
+
+
+
 
 ; grid locations
 grid_one:       .string 27, "[2;2H",0
@@ -288,6 +328,27 @@ middle_six:       .string 27, "[11;10H",0
 middle_seven:     .string 27, "[11;3H",0
 middle_eight:     .string 27, "[7;3H",0
 middle_nine:      .string 27, "[7;10H",0
+
+
+;oneT:			.string 27, "[2;3H",0
+;oneB:			.string 27, "[4;3H",0
+;twoT:			.string 27, "[2;10H",0
+;twoB:			.string 27, "[4;10H",0
+;threeT:			.string 27, "[2;17H",0
+;threeB:			.string 27, "[4;17H",0
+;fourT:			.string 27, "[6;17H",0
+;fourB:			.string 27, "[8;17H",0
+;fiveT:			.string 27, "[10;17H",0
+;fiveB:			.string 27, "[12;17H",0
+;sixT:			.string 27, "[10;10H",0
+;sixB:			.string 27, "[12;10H",0
+;sevenT:			.string 27, "[10;3H",0
+;sevenB:			.string 27, "[12;3H",0
+;eightT:			.string 27, "[6;3H",0
+;eightB:			.string 27, "[8;3H",0
+;nineT:			.string 27, "[6;10H",0
+;nineB:			.string 27, "[8;10H",0
+
 
 movesPosition:		.string 27, "[15;21H", 0
 
@@ -318,6 +379,8 @@ ptr_middle7:	.word middle_seven
 ptr_middle8:	.word middle_eight
 ptr_middle9:	.word middle_nine
 
+;ptr_nineT:		.word	nineT
+;ptr_nineB:		.word	nineB
 
 
 ptr_movesPosition:	.word movesPosition
@@ -325,115 +388,564 @@ ptr_movesPosition:	.word movesPosition
 
 ptr_board_outline:	.word	board_outline
 
+
+ptr_rotationFace:	.word	fill_rotation_face
+ptr_animationFace:	.word	animation_face
+
 U0FR: .equ 0x18		;UART0 Flag Register
 
 
 
-countColors:
-	push	{r0-r4, lr}
-
-	mov		r1, #0
-
-	;reset all back to 0
-	ldr		r0, ptr_countRed
-	strb	r1,	[r0]
-
-	ldr		r0, ptr_countWhite
-	strb	r1,	[r0]
-
-	ldr		r0, ptr_countPurple
-	strb	r1,	[r0]
-
-	ldr		r0, ptr_countBlue
-	strb	r1,	[r0]
-
-	ldr		r0, ptr_countGreen
-	strb	r1,	[r0]
-
-	ldr		r0, ptr_countYellow
-	strb	r1,	[r0]
 
 
 
 
-	mov		r5, #0
-	ldr		r4, ptr_face1
-incrementColorCount:
-	cmp		r5, #54
-	bge		colorCountEnd
 
-	add		r5, #1
-
-
-	ldrb	r2,	[r4], #1
-
-	cmp 	r2, #face_red
-	beq		incRed
-
-	cmp 	r2, #face_white
-	beq		incWhite
-
-	cmp 	r2, #face_purple
-	beq		incPurple
-
-	cmp 	r2, #face_blue
-	beq		incBlue
-
-	cmp 	r2, #face_green
-	beq		incGreen
-
-	cmp 	r2, #face_yellow
-	beq		incYellow
-
-
-incRed:
-	ldr		r0, ptr_countRed
-	ldrb	r3, [r0]
-	add		r3, #1
-	strb	r3, [r0]
-	b		incrementColorCount
-
-incWhite:
-	ldr		r0, ptr_countWhite
-	ldrb	r3, [r0]
-	add		r3, #1
-	strb	r3, [r0]
-	b		incrementColorCount
-
-incPurple:
-	ldr		r0, ptr_countPurple
-	ldrb	r3, [r0]
-	add		r3, #1
-	strb	r3, [r0]
-	b		incrementColorCount
-
-incBlue:
-	ldr		r0, ptr_countBlue
-	ldrb	r3, [r0]
-	add		r3, #1
-	strb	r3, [r0]
-	b		incrementColorCount
-
-
-incGreen:
-	ldr		r0, ptr_countGreen
-	ldrb	r3, [r0]
-	add		r3, #1
-	strb	r3, [r0]
-	b		incrementColorCount
-
-incYellow:
-	ldr		r0, ptr_countYellow
-	ldrb	r3, [r0]
-	add		r3, #1
-	strb	r3, [r0]
-	b		incrementColorCount
+; UP_OFFSET is 0.
+LEFT_OFFSET:	.equ	1
+DOWN_OFFSET:	.equ	2
+RIGHT_OFFSET:	.equ	3
+BACK_OFFSET:	.equ	4
 
 
 
-colorCountEnd:
-	pop 	{r0-r4, lr}
-	mov 	pc, lr
+
+; 0xa1 - rotating left (new face is on the right) - state 1
+; 0xa2 - rotating left - state 2
+; 0xb1 - rotating up (new face is on the bottom) - state 1
+; 0xb2 - rotating up - state 2
+; 0xc1 - rotating right - state 1
+; 0xc2 - rotating right - state 2
+; 0xd1 - rotating down - state 1
+; 0xd2 - rotating down - state 2
+animate_rotation:
+	push	{lr}
+
+	; first we need to check which rotation and state we are on.
+	ldrb	r0, [r5]
+
+	; final animation, just load the full current face
+	cmp		r0, #3
+	itt		eq
+	bleq	draw_colors
+	beq		animate_rotation_end
+
+	; location of new animation face
+	ldr		r1, ptr_rotationFace
+
+
+	cmp		r0, #0xa1
+	beq		rotLeft1
+
+	cmp		r0, #0xa2
+	beq		rotLeft2
+
+	cmp		r0, #0xb1
+	beq		rotUp1
+
+	cmp		r0, #0xb2
+	beq		rotUp2
+
+	cmp		r0, #0xc1
+	beq		rotRight1
+
+	cmp		r0, #0xc2
+	beq		rotRight2
+
+	cmp		r0, #0xd1
+	beq		rotDown1
+
+	cmp		r0, #0xd2
+	beq		rotDown2
+
+	b		animate_rotation_end
+
+rotLeft1:
+	; this subroutine will eventually load the right face in the end.
+	; get the left face since we're rotating to the left
+	; subroutine adjust_rotation updates all the faces
+	; in the background so we have to backtrack to load
+	; in the correct data.
+	; The left face was the face that we were previously on.
+	ldr		r3, ptr_faceDirection
+	ldrb	r3, [r3, #LEFT_OFFSET]
+	bl		get_face
+	; r4 now contains the face we should load from
+
+	; do rotating left sequence
+	bl		rotLeftSeq
+
+	; rotation for last row/column
+	; 1, 8, 7 of new face
+	; 3, 4, 5 of old face
+	; (note: SUBTRACT BY 1 TO GET INDEX)
+
+	; now we should the colors of the new face to the last row/column
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	bl		get_face
+
+	; move 1 -> 3
+	ldrb	r0, [r4]
+	strb	r0, [r1, #2]
+
+	; move 8 -> 4
+	ldrb	r0, [r4, #7]
+	strb	r0, [r1, #3]
+
+	; move 7 -> 5
+	ldrb	r0, [r4, #6]
+	strb	r0, [r1, #4]
+
+	; draw this new board & save the address of this new board to memory
+	mov		r4, r1
+	ldr		r0, ptr_animationFace
+	str		r4, [r0]
+	bl		start_drawing
+
+	; change to rotation state 2
+	mov		r0, #0xa2
+	strb	r0, [r5]
+
+	b		no_reset_animation
+
+
+rotLeft2:
+	; this subroutine will eventually load the right face in the end.
+	; The animation face was the face that we were previously on
+	; from the previous animation
+	ldr		r3, ptr_animationFace
+	ldr		r4, [r3]
+	; r4 now contains the face we should load from
+
+
+	; do rotating left sequence
+	bl		rotLeftSeq
+
+	; now we should the colors of the new face to the last row/column
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	bl		get_face
+
+	; NOTE: This is the second iteration of the animation
+	; rotation for last row/column
+	; 2, 9, 6 of new face
+	; 3, 4, 5 of old face
+	; (note: SUBTRACT BY 1 TO GET INDEX)
+
+	; move 2 -> 3
+	ldrb	r0, [r4, #1]
+	strb	r0, [r1, #2]
+
+	; move 9 -> 4
+	ldrb	r0, [r4, #8]
+	strb	r0, [r1, #3]
+
+	; move 6 -> 5
+	ldrb	r0, [r4, #5]
+	strb	r0, [r1, #4]
+
+	; draw this new board
+	mov		r4, r1
+
+	; may not need
+	;ldr		r0, ptr_animationFace
+	;str		r4, [r0]
+
+	bl		start_drawing
+
+	; change to final rotation state
+	mov		r0, #0x3
+	strb	r0, [r5]
+
+	b		no_reset_animation
+
+
+
+rotUp1:
+	; this subroutine will eventually load the bottom face in the end.
+	; get the top face since we're rotating to the top
+	; subroutine adjust_rotation updates all the faces
+	; in the background so we have to backtrack to load
+	; in the correct data.
+	; The top face was the face that we were previously on.
+	ldr		r3, ptr_faceDirection
+	ldrb	r3, [r3]	; up offset is 0
+	bl		get_face
+	; r4 now contains the face we should load from
+
+	; do the rotating up sequence
+	bl		rotUpSeq
+
+	; now we should the colors of the new face to the last row/column
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	bl		get_face
+
+	; rotation for last row/column
+	; 1, 2, 3 of new face
+	; 7, 6, 5 of old face
+	; (note: SUBTRACT BY 1 TO GET INDEX)
+
+	; move 1 -> 7
+	ldrb	r0, [r4]
+	strb	r0, [r1, #6]
+
+	; move 2 -> 6
+	ldrb	r0, [r4, #1]
+	strb	r0, [r1, #5]
+
+	; move 3 -> 5
+	ldrb	r0, [r4, #2]
+	strb	r0, [r1, #4]
+
+	; draw this new board & save the address of this new board to memory
+	mov		r4, r1
+	ldr		r0, ptr_animationFace
+	str		r4, [r0]
+	bl		start_drawing
+
+	; change to rotation state 2
+	mov		r0, #0xb2
+	strb	r0, [r5]
+
+	b		no_reset_animation
+
+
+
+rotUp2:
+	; this subroutine will eventually load the bottom face in the end.
+	; The animation face was the face that we were previously on
+	; from the previous animation.
+	ldr		r3, ptr_animationFace
+	ldr		r4, [r3]
+	; r4 now contains the face we should load from
+
+	; do the rotating up sequence
+	bl		rotUpSeq
+
+	; now we should the colors of the new face to the last row/column
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	bl		get_face
+
+	; rotation for last row/column
+	; 8, 9, 4 of new face
+	; 7, 6, 5 of old face
+	; (note: SUBTRACT BY 1 TO GET INDEX)
+
+	; move 8 -> 7
+	ldrb	r0, [r4, #7]
+	strb	r0, [r1, #6]
+
+	; move 9 -> 6
+	ldrb	r0, [r4, #8]
+	strb	r0, [r1, #5]
+
+	; move 4 -> 5
+	ldrb	r0, [r4, #3]
+	strb	r0, [r1, #4]
+
+	; draw this new board & save the address of this new board to memory
+	mov		r4, r1
+;	ldr		r0, ptr_animationFace
+;	str		r4, [r0]
+	bl		start_drawing
+
+	; change to final rotation state
+	mov		r0, #0x3
+	strb	r0, [r5]
+
+	b		no_reset_animation
+
+
+rotRight1:
+	; this subroutine will eventually load the left face in the end.
+	; get the right face since we're rotating to the right
+	; subroutine adjust_rotation updates all the faces
+	; in the background so we have to backtrack to load
+	; in the correct data.
+	; The top face was the face that we were previously on.
+	ldr		r3, ptr_faceDirection
+	ldrb	r3, [r3, #RIGHT_OFFSET]
+	bl		get_face
+	; r4 now contains the face we should load from
+
+	; do the rotating up sequence
+	bl		rotRightSeq
+
+	; now we should the colors of the new face to the last row/column
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	bl		get_face
+
+	; rotation for last row/column
+	; 3, 4, 5 of new face
+	; 1, 8, 7 of old face
+	; (note: SUBTRACT BY 1 TO GET INDEX)
+
+	; move 3 -> 1
+	ldrb	r0, [r4, #2]
+	strb	r0, [r1]
+
+	; move 4 -> 8
+	ldrb	r0, [r4, #3]
+	strb	r0, [r1, #7]
+
+	; move 5 -> 7
+	ldrb	r0, [r4, #4]
+	strb	r0, [r1, #6]
+
+	; draw this new board & save the address of this new board to memory
+	mov		r4, r1
+	ldr		r0, ptr_animationFace
+	str		r4, [r0]
+	bl		start_drawing
+
+	; change to rotation state 2
+	mov		r0, #0xc2
+	strb	r0, [r5]
+
+	b		no_reset_animation
+
+rotRight2:
+	; this subroutine will eventually load the left face in the end.
+	; The animation face was the face that we were previously on
+	; from the previous animation
+	ldr		r3, ptr_animationFace
+	ldr		r4, [r3]
+	; r4 now contains the face we should load from
+
+	; do the rotating up sequence
+	bl		rotRightSeq
+
+	; now we should the colors of the new face to the last row/column
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	bl		get_face
+
+	; rotation for last row/column
+	; 2, 9, 6 of new face
+	; 1, 8, 7 of old face
+	; (note: SUBTRACT BY 1 TO GET INDEX)
+
+	; move 2 -> 1
+	ldrb	r0, [r4, #1]
+	strb	r0, [r1]
+
+	; move 9 -> 8
+	ldrb	r0, [r4, #8]
+	strb	r0, [r1, #7]
+
+	; move 6 -> 7
+	ldrb	r0, [r4, #5]
+	strb	r0, [r1, #6]
+
+	; draw this new board & save the address of this new board to memory
+	mov		r4, r1
+;	ldr		r0, ptr_animationFace
+;	str		r4, [r0]
+	bl		start_drawing
+
+	; change to final rotation state
+	mov		r0, #3
+	strb	r0, [r5]
+
+	b		no_reset_animation
+
+rotDown1:
+	; this subroutine will eventually load the top face in the end.
+	; get the bottom face since we're rotating to the bottom
+	; subroutine adjust_rotation updates all the faces
+	; in the background so we have to backtrack to load
+	; in the correct data.
+	; The top face was the face that we were previously on.
+	ldr		r3, ptr_faceDirection
+	ldrb	r3, [r3, #DOWN_OFFSET]	; up offset is 0
+	bl		get_face
+	; r4 now contains the face we should load from
+
+	; do the rotating up sequence
+	bl		rotDownSeq
+
+	; now we should the colors of the new face to the last row/column
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	bl		get_face
+
+	; rotation for last row/column
+	; 7, 6, 5 of new face
+	; 1, 2, 3 of old face
+	; (note: SUBTRACT BY 1 TO GET INDEX)
+
+	; move 7 -> 1
+	ldrb	r0, [r4, #6]
+	strb	r0, [r1]
+
+	; move 6 -> 2
+	ldrb	r0, [r4, #5]
+	strb	r0, [r1, #1]
+
+	; move 5 -> 3
+	ldrb	r0, [r4, #4]
+	strb	r0, [r1, #2]
+
+	; draw this new board & save the address of this new board to memory
+	mov		r4, r1
+	ldr		r0, ptr_animationFace
+	str		r4, [r0]
+	bl		start_drawing
+
+	; change to rotation state 2
+	mov		r0, #0xd2
+	strb	r0, [r5]
+
+	b		no_reset_animation
+
+
+
+rotDown2:
+	; this subroutine will eventually load the top face in the end.
+	; The animation face was the face that we were previously on
+	; from the previous animation
+	ldr		r3, ptr_animationFace
+	ldr		r4, [r3]
+	; r4 now contains the face we should load from
+
+	; do the rotating up sequence
+	bl		rotDownSeq
+
+	; now we should the colors of the new face to the last row/column
+	ldr		r0, ptr_currentFace
+	ldrb	r3,	[r0]	; load current face number
+	bl		get_face
+
+	; rotation for last row/column
+	; 8, 9, 4 of new face
+	; 1, 2, 3 of old face
+	; (note: SUBTRACT BY 1 TO GET INDEX)
+
+	; move 8 -> 1
+	ldrb	r0, [r4, #7]
+	strb	r0, [r1]
+
+	; move 9 -> 2
+	ldrb	r0, [r4, #8]
+	strb	r0, [r1, #1]
+
+	; move 4 -> 3
+	ldrb	r0, [r4, #3]
+	strb	r0, [r1, #2]
+
+	; draw this new board & save the address of this new board to memory
+	mov		r4, r1
+;	ldr		r0, ptr_animationFace
+;	str		r4, [r0]
+	bl		start_drawing
+
+	; change to final rotation state
+	mov		r0, #3
+	strb	r0, [r5]
+
+	b		no_reset_animation
+
+
+animate_rotation_end:
+	; if we just did the final animation, reset rotation state
+	; first we need to check which rotation and state we are on.
+	ldrb	r0, [r5]
+	cmp		r0, #3
+	bne		no_reset_animation
+	mov		r0, #0
+	strb	r0, [r5]
+
+no_reset_animation:
+	pop		{lr}
+	mov		pc, lr
+
+
+
+
+
+
+; NOTE: FOR SPACE OF INSTRUCTIONS THIS POINTER NEEDS TO BE CLOSE TO
+;		INSTRUCTIONS THAT USE IT. HENCE WHY IT IS DOWN SO FAR IN THE TEXT.
+ptr_faceDirection:	.word faceDirection
+; pointers to faces
+ptr_currentFace:	.word currentFace
+ptr_blankFace:		.word blankFace
+
+
+check_if_valid_move:
+	push 	{r0, r2, lr}
+	; r1 should store the square the player wants to go to and the square that should be checked if it is valid
+	sub 	r1, #1	;for indexing sub by 1
+
+	; get the player's current color
+	ldr 	r0, ptr_playerColor
+	ldrb	r2, [r0]
+
+	;ldr		r0, ptr_currentFace
+	;ldrb	r3, [r0]
+	;bl		get_face ; stores face in r4
+
+; r4 should already have face to check against loaded
+
+	ldrb	r3, [r4, r1]
+
+	; shift left by player's color
+	mov 	r0, #1
+	lsl 	r0, r0, r2
+
+
+
+
+	cmp		r0, r3
+	bne		is_valid
+	pop 	{r0, r2, lr}
+	b		finish_player_move
+
+
+is_valid:
+	add		r1, #1
+	pop 	{r0, r2, lr}
+	mov		pc, lr
+
+
+check_if_valid_rotation:
+	; r1 should store the square the player wants to go to and the square that should be checked if it is valid
+	sub 	r1, #1	;for indexing sub by 1
+
+	; get the player's current color
+	ldr 	r0, ptr_playerColor
+	ldrb	r2, [r0]
+
+	;ldr		r0, ptr_currentFace
+	;ldrb	r3, [r0]
+	;bl		get_face ; stores face in r4
+
+; r4 should already have face to check against loaded
+
+	ldrb	r3, [r4, r1]
+
+	; shift left by player's color
+	mov 	r0, #1
+	lsl 	r0, r0, r2
+
+
+
+
+	cmp		r0, r3
+	bne		is_valid_rotation
+	pop		{lr}
+	b		actual_end
+
+
+is_valid_rotation:
+	add		r1, #1
+	mov		pc, lr
+
+
 
 
 draw_peek:
@@ -503,7 +1015,12 @@ draw_peek:
 	pop		{r4, lr}
 	mov 	pc, lr
 draw_colors:
-	push {r4, lr}
+	push  	{lr}
+
+	; skip getting the face if rotating the current face
+	ldrb	r0, [r9]
+	cmp		r0, #1
+	bne		start_drawing
 
 	; load face
 	ldr		r2, ptr_currentFace
@@ -511,8 +1028,11 @@ draw_colors:
 
 	bl 		get_face
 
+	pop		{lr}
+
 
 start_drawing:
+	push	{lr}
 	; goto location of grid 1
 	ldr 	r0, ptr_grid1
 	bl 		output_string
@@ -568,10 +1088,43 @@ start_drawing:
 	bl 		get_color
 	bl 		output_string
 
+
+	; if in the middle of an animation for rotations
+	; do not draw the player
+	ldrb	r0, [r5]
+	cmp		r0, #0
+	beq		normal_playerPos
+
+	cmp		r0, #3
+	beq		normal_playerPos
+
+	b		draw_end
+
+	;ldrb	r0, [r9]
+	;cmp		r0, #8
+	;beq		pre_rotation_return
+
+
+	;cmp		r0, #9
+	;beq		get_rotation_playerPos
+	;b		normal_playerPos
+
+;pre_rotation_return:
+;	pop		{lr}
+;	b		rotation_return
+
+;get_rotation_playerPos:
 	; draw player location
+;	ldr		r0, ptr_rotation_playerPos;
+;	ldrb	r1, [r0]
+;	b		checkPlayerPos
+
+
+normal_playerPos:
 	ldr		r0,	ptr_playerPos
 	ldrb	r1, [r0]
 
+checkPlayerPos:
 	cmp		r1, #1
 	bne		checkPos2
 	ldr 	r0, ptr_middle1
@@ -696,8 +1249,11 @@ set_player_yellow:
 
 draw_end:
 	;bl		countColors
-	pop 	{r4, lr}  						; Restore lr from stack
+	pop 	{lr}  						; Restore lr from stack
+rotation_return:
 	mov 	pc, lr
+
+
 
 
 ; will save found color into r0
@@ -865,25 +1421,68 @@ uart_init:
 	bl		uart_interrupt_init
 	; Pop used registers from stack
 
+
+	pop 	{r0, r4, r5}
+	pop 	{lr}  						; Restore lr from stack
+	mov 	pc, lr
+
+show_home_screen:
+	push	{lr}
 	ldr 	r0, ptr_menu_message
 	bl 		output_string
+	bl		lcd_show_home
+
 
 wait_for_space:
 	bl		simple_read_character
 	cmp 	r0, #0
 	beq		wait_for_space
 
-	bl		restart_game
 
-	pop 	{r0, r4, r5}
+
+	bl		restart_game
 
 	pop 	{lr}  						; Restore lr from stack
 	mov 	pc, lr
 
 
-
 restart_game:
 	push	{lr}
+
+	bl		clear_lcd
+
+	; print time and moves text on lcd
+	;bl		lcd_print_time_and_moves
+
+;	mov		r1, #0x11	; move cursor to row 2 column 1
+;	bl		move_lcd_cursor
+;	mov		r0, #'T'
+;	bl		lcd_data
+;	mov		r0, #':'
+;	bl		lcd_data
+
+	; print initial time on lcd
+;	mov		r1, #0x13	; move cursor to row 2 column 3
+;	bl		move_lcd_cursor
+;	mov		r0, #'0'
+;	bl		lcd_data
+
+	; print moves on lcd
+;	mov		r1, #0x19	; move cursor to row 2 column 9
+;	bl		move_lcd_cursor
+;	mov		r0, #'M'
+;	bl		lcd_data
+;	mov		r0, #':'
+;	bl		lcd_data
+
+	bl		lcd_print_time_and_moves
+	; print initial moves on lcd
+	mov		r1, #movesPlacement	; move cursor to row 2 column 8
+	bl		move_lcd_cursor
+	mov		r0, #'0'
+	bl		lcd_data
+
+
 	; set the game state
 	mov		r0, #1
 	strb	r0, [r9]
@@ -936,6 +1535,7 @@ reset_square_color:
 
 
 scramble_cube:
+	push	{r5}
 	mov r0, #0
 	ldr r1, ptr_face1
 
@@ -1030,6 +1630,7 @@ checkForFace:
 
 
 set_face_end:
+	pop		{r5}
 	mov		pc, lr
 
 
@@ -1214,6 +1815,7 @@ uart_interrupt_init:
 
 
 UART0_Handler:
+	;bx	lr
 	push 	{lr}
 	; Push registers 4 - 11 to preserve values
 	push 	{r4-r11}
@@ -1259,6 +1861,16 @@ check_key:
 
 	cmp 	r0, #' '
 	beq		pickColor
+
+;	cmp		r0, #'m'
+;	beq		clockwise_rotation
+;	cmp		r0, #'M'
+;	beq		clockwise_rotation
+;
+;	cmp		r0, #'n'
+;	beq		counterclockwise_rotation
+;	cmp		r0, #'N'
+;	beq		counterclockwise_rotation
 
 	cmp		r0, #'q'
 	beq		quit_rubiks
@@ -1374,11 +1986,11 @@ moveRight:
 pickColor:
 	; check if the player won the game and wants to replay.
 	cmp		r1, #4
-	bne		no_replay
+	bne		not_replay
 	bl		restart_game
 	b		actual_end
 
-no_replay:
+not_replay:
 	ldr		r0, ptr_playerPos
 	ldrb	r1,	[r0]
 	sub		r1, #1
@@ -1408,12 +2020,18 @@ swap_color_check:
 
 	strb	r0,	[r4, r1] ; store player color on sqaure
 
-	mov 	r4, #0x5A	; load random value to check
+	mov 	r10, #0x5A	; load arbitrary value to check if player has won the game
 
 
 
 finish_player_move:
-	bl 		draw_colors
+	; check if rotating to a new cube.
+	ldrb	r0, [r5]
+	cmp		r0, #0
+	it		eq
+	bleq 	draw_colors 	; only draw if on the same face and not rotating to a new cube.
+
+
 	; update move count
 	ldr		r0, ptr_movesPosition
 	bl		output_string
@@ -1425,10 +2043,15 @@ finish_player_move:
 	ldr		r1, ptr_print_moves
 	bl		int2string
 	mov		r0, r1
+	push	{r0}
 	bl		output_string
+	pop		{r0}
+
+	mov		r1, #movesPlacement	; row 2 column 6 start printing
+	bl		lcd_print_string
 
 	; only check for wins on color switch
-	cmp		r4, #0x5A
+	cmp		r10, #0x5A	; 0x5A is set if the player has changed their color
 	it		eq
 	bleq	check_win
 	b		actual_end
@@ -1447,6 +2070,8 @@ check_pause_actions:
 	beq		quit_from_pause
 	cmp		r0, #'Q'
 	beq		quit_from_pause
+
+	b		actual_end
 
 
 restart_from_pause:
@@ -1473,6 +2098,8 @@ pause_game:
 	ldr		r0, ptr_pause_menu
 	bl		output_string
 
+	bl		lcd_show_pause
+
 	b		actual_end
 
 unpause_game:
@@ -1484,6 +2111,9 @@ unpause_game:
 	ldr 	r0, ptr_board_outline
 	bl		output_string
 	bl 		draw_colors
+
+	bl		lcd_print_time_and_moves
+
 
 	b		actual_end
 
@@ -1500,6 +2130,17 @@ actual_end:
 	pop 	{lr}
 
 	BX 		lr       					; Return
+
+
+
+
+
+
+
+
+
+
+
 
 
 check_win:
@@ -1539,6 +2180,9 @@ has_won:
 
 	; show the player time
 	bl		show_player_time
+
+	; output on lcd win message
+	bl		lcd_show_win
 
 	b 		end_win_check
 
@@ -1614,6 +2258,10 @@ update_from_1:
 	bl		check_if_valid_move
 	bl		adjust_rotation
 
+	; update the rotation data
+	mov		r0, #0xd1
+	strb	r0, [r5]
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -1629,6 +2277,10 @@ left_1:
 	mov		r1,	#3
 	bl		check_if_valid_move
 	bl		adjust_rotation
+
+	; update the rotation data
+	mov		r0, #0xc1
+	strb	r0, [r5]
 
 	strb	r1, [r2]
 	b		finish_player_move
@@ -1676,6 +2328,10 @@ update_from_2:
 	mov		r1,	#6
 	bl		check_if_valid_move
 	bl		adjust_rotation
+
+	; update the rotation data
+	mov		r0, #0xd1
+	strb	r0, [r5]
 
 	strb	r1, [r2]
 	b		finish_player_move
@@ -1738,6 +2394,10 @@ update_from_3:
 	bl		check_if_valid_move
 	bl		adjust_rotation
 
+	; update the rotation data
+	mov		r0, #0xd1
+	strb	r0, [r5]
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -1781,6 +2441,12 @@ right_3:
 	mov		r1,	#1
 	bl		check_if_valid_move
 	bl		adjust_rotation
+
+	; update the rotation data
+	mov		r0, #0xa1
+	strb	r0, [r5]
+
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -1842,6 +2508,10 @@ right_4:
 	bl		check_if_valid_move
 	bl		adjust_rotation
 
+	; update the rotation data
+	mov		r0, #0xa1
+	strb	r0, [r5]
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -1889,6 +2559,10 @@ down_5:
 	bl		check_if_valid_move
 	bl		adjust_rotation
 
+	; update the rotation data
+	mov		r0, #0xb1
+	strb	r0, [r5]
+
 	strb	r1, [r2]
 	b 		finish_player_move
 
@@ -1904,6 +2578,10 @@ right_5:
 	mov		r1,	#7
 	bl		check_if_valid_move
 	bl		adjust_rotation
+
+	; update the rotation data
+	mov		r0, #0xa1
+	strb	r0, [r5]
 
 	strb	r1, [r2]
 	b		finish_player_move
@@ -1952,6 +2630,10 @@ down_6:
 	bl		check_if_valid_move
 	bl		adjust_rotation
 
+	; update the rotation data
+	mov		r0, #0xb1
+	strb	r0, [r5]
+
 	strb	r1, [r2]
 	b 		finish_player_move
 
@@ -1999,6 +2681,10 @@ left_7:
 	bl		check_if_valid_move
 	bl		adjust_rotation
 
+	; update the rotation data
+	mov		r0, #0xc1
+	strb	r0, [r5]
+
 	strb	r1, [r2]
 	b		finish_player_move
 
@@ -2014,6 +2700,10 @@ down_7:
 	mov		r1,	#1
 	bl		check_if_valid_move
 	bl		adjust_rotation
+
+	; update the rotation data
+	mov		r0, #0xb1
+	strb	r0, [r5]
 
 	strb	r1, [r2]
 	b 		finish_player_move
@@ -2061,6 +2751,10 @@ left_8:
 	mov		r1,	#4
 	bl		check_if_valid_move
 	bl		adjust_rotation
+
+	; update the rotation data
+	mov		r0, #0xc1
+	strb	r0, [r5]
 
 	strb	r1, [r2]
 	b		finish_player_move
@@ -2192,7 +2886,7 @@ rotate_up:
 
 	ldrb	r2, [r1, #BACK_OFFSET]
 	strb	r2,	[r1]	; set back face to new top face
-	strb	r4, [r1, #BACK_OFFSET]	; store current down to back face
+	strb	r4, [r1, #BACK_OFFSET]	; store current top to back face
 
 	b		rotate_end
 
@@ -2211,7 +2905,7 @@ rotate_left:
 
 	ldrb	r2, [r1, #BACK_OFFSET]
 	strb	r2,	[r1, #LEFT_OFFSET]	; set back face to new left face
-	strb	r4, [r1, #BACK_OFFSET]	; store current right to back face
+	strb	r4, [r1, #BACK_OFFSET]	; store current left to back face
 
 
 	b		rotate_end
@@ -2231,7 +2925,7 @@ rotate_down:
 
 	ldrb	r2, [r1, #BACK_OFFSET]
 	strb	r2,	[r1, #DOWN_OFFSET]	; set back face to new down face
-	strb	r4, [r1, #BACK_OFFSET]	; store current up to back face
+	strb	r4, [r1, #BACK_OFFSET]	; store current down to back face
 
 
 	b		rotate_end
@@ -2252,7 +2946,7 @@ rotate_right:
 
 	ldrb	r2, [r1, #BACK_OFFSET]
 	strb	r2,	[r1, #RIGHT_OFFSET]	; set back face to new right face
-	strb	r4, [r1, #BACK_OFFSET]	; store current left to back face
+	strb	r4, [r1, #BACK_OFFSET]	; store current right to back face
 
 
 	b		rotate_end
@@ -2261,6 +2955,8 @@ rotate_right:
 rotate_end:
 	pop {r1-r2, lr}
  	mov pc, lr
+
+
 
 
 ; r0 contains which way the player went
@@ -2543,40 +3239,6 @@ update_parallel_faces_done:
 
 
 
-check_if_valid_move:
-	push 	{r0, r2, lr}
-	; r1 should store the square the player wants to go to and the square that should be checked if it is valid
-	sub 	r1, #1	;for indexing sub by 1
-
-	; get the player's current color
-	ldr 	r0, ptr_playerColor
-	ldrb	r2, [r0]
-
-	;ldr		r0, ptr_currentFace
-	;ldrb	r3, [r0]
-	;bl		get_face ; stores face in r4
-
-; r4 should already have face to check against loaded
-
-	ldrb	r3, [r4, r1]
-
-	; shift left by player's color
-	mov 	r0, #1
-	lsl 	r0, r0, r2
-
-
-
-
-	cmp		r0, r3
-	bne		is_valid
-	pop 	{r0, r2, lr}
-	b		finish_player_move
-
-
-is_valid:
-	add		r1, #1
-	pop 	{r0, r2, lr}
-	mov		pc, lr
 
 
 
@@ -2936,4 +3598,393 @@ endUART_number:
 	.end
 
 
+countColors:
+	push	{r0-r4, lr}
+
+	mov		r1, #0
+
+	;reset all back to 0
+	ldr		r0, ptr_countRed
+	strb	r1,	[r0]
+
+	ldr		r0, ptr_countWhite
+	strb	r1,	[r0]
+
+	ldr		r0, ptr_countPurple
+	strb	r1,	[r0]
+
+	ldr		r0, ptr_countBlue
+	strb	r1,	[r0]
+
+	ldr		r0, ptr_countGreen
+	strb	r1,	[r0]
+
+	ldr		r0, ptr_countYellow
+	strb	r1,	[r0]
+
+
+
+
+	mov		r5, #0
+	ldr		r4, ptr_face1
+incrementColorCount:
+	cmp		r5, #54
+	bge		colorCountEnd
+
+	add		r5, #1
+
+
+	ldrb	r2,	[r4], #1
+
+	cmp 	r2, #face_red
+	beq		incRed
+
+	cmp 	r2, #face_white
+	beq		incWhite
+
+	cmp 	r2, #face_purple
+	beq		incPurple
+
+	cmp 	r2, #face_blue
+	beq		incBlue
+
+	cmp 	r2, #face_green
+	beq		incGreen
+
+	cmp 	r2, #face_yellow
+	beq		incYellow
+
+
+incRed:
+	ldr		r0, ptr_countRed
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+incWhite:
+	ldr		r0, ptr_countWhite
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+incPurple:
+	ldr		r0, ptr_countPurple
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+incBlue:
+	ldr		r0, ptr_countBlue
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+
+incGreen:
+	ldr		r0, ptr_countGreen
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+incYellow:
+	ldr		r0, ptr_countYellow
+	ldrb	r3, [r0]
+	add		r3, #1
+	strb	r3, [r0]
+	b		incrementColorCount
+
+colorCountEnd:
+	pop 	{r0-r4, lr}
+	mov 	pc, lr
+
+
+
+	pick_second_rotation:
+	push	{lr}
+
+	ldr 	r1, ptr_rotationSelect
+	ldrb	r0, [r1]
+
+	cmp		r0, #1
+	beq		ccw_valid
+
+	cmp		r0, #2
+	beq		cw_valid
+
+	pop		{lr}
+	mov		pc, lr
+
+
+
+clockwise_rotation:
+	push	{lr}
+
+	; first check if end result is a valid move
+	ldr		r1, ptr_playerPos
+	ldrb	r0, [r1]
+
+	cmp		r0, #9
+	beq		cw_valid
+
+	; square 2 case
+	cmp		r0, #2
+	it		eq
+	moveq 	r1, #10
+
+	; square 1 case
+	cmp		r0, #1
+	it		eq
+	moveq	r1, #9
+
+	sub		r1, r0, #2 	; the square to check
+	ldr		r2, ptr_currentFace
+	ldrb	r3, [r2]
+	bl		get_face
+	bl		check_if_valid_rotation
+
+cw_valid:
+
+	;store rotation
+	ldr		r1, ptr_rotationSelect
+	mov		r0, #2
+	strb	r0, [r1]
+
+	; get the current face
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
+	ldr		r5, ptr_blankFace
+
+	mov 	r3, #0	;offset counter
+
+	;check state
+	ldrb	r1, [r9]
+
+	cmp		r1, #1
+	beq		cw_first_rotation
+
+	cmp		r1, #7
+	beq		cw_second_rotation
+
+	b		cw_face_rotation1_end
+
+cw_first_rotation:
+	mov		r0, #8
+	strb	r0, [r9]
+
+cw_first_turn:
+	ldrb	r0, [r4, r3]
+	add		r3, #1
+	strb	r0, [r5, r3]
+
+	cmp		r3, #7
+	blt		cw_first_turn
+
+	; sqaure 8 case
+	ldrb	r0, [r4, #7]
+	strb	r0, [r5]
+
+	;square 9 is the same
+	ldrb	r0, [r4, #8]
+	strb	r0, [r5, #8]
+
+	;save into addr_rotation from cube.s
+	str		r5, [r8]
+
+	b		cw_face_rotation1_end
+
+
+cw_second_rotation:
+
+	mov		r0, #1
+	strb	r0, [r9]
+cw_second_turn:
+	ldrb	r0, [r4, r3]
+	add		r3, #2
+	strb	r0, [r5, r3]
+
+	sub		r3, #1
+	cmp		r3, #6
+	blt		cw_second_turn
+
+	; square 7 case
+	ldrb	r0, [r4, #6]
+	strb	r0, [r5]
+
+	; sqaure 8 case
+	ldrb	r0, [r4, #7]
+	strb	r0, [r5, #1]
+
+	;square 9 is the same
+	ldrb	r0, [r4, #8]
+	strb	r0, [r5, #8]
+
+	;save into addr_rotation from cube.s
+	str		r5, [r8]
+
+	; save the blank face as the real face.
+	mov		r0, #0
+cw_saveToCurrentFace:
+	ldrb	r1, [r5], #1
+	strb	r1, [r4], #1
+	add		r0, #1
+	cmp		r0, #9
+	blt		cw_saveToCurrentFace
+
+	; save state
+	mov		r0, #9
+	strb	r0, [r9]
+
+	; reset rotation
+	ldr		r1, ptr_rotationSelect
+	mov		r0, #0
+	strb	r0, [r1]
+
+
+
+	pop		{lr}
+	mov		pc, lr
+
+cw_face_rotation1_end:
+	pop 	{lr}
+	b		actual_end
+
+
+
+counterclockwise_rotation:
+	push	{lr}
+
+	; first check if end result is a valid move
+	ldr		r1, ptr_playerPos
+	ldrb	r0, [r1]
+
+	cmp		r0, #9
+	beq		ccw_valid
+
+	; square 7 case
+	cmp		r0, #7
+	it		eq
+	moveq 	r1, #-1
+
+	; square 8 case
+	cmp		r0, #8
+	it		eq
+	moveq	r1, #0
+
+	add		r1, r0, #2 	; the square to check
+	ldr		r2, ptr_currentFace
+	ldrb	r3, [r2]
+	bl		get_face
+	bl		check_if_valid_rotation
+
+ccw_valid:
+	;store rotation
+	ldr		r1, ptr_rotationSelect
+	mov		r0, #1
+	strb	r0, [r1]
+
+	; get the current face
+	ldr		r1,	ptr_currentFace
+	ldrb	r3, [r1]
+	bl		get_face	; stored in r4
+
+	ldr		r5, ptr_blankFace
+
+	mov 	r3, #7	;offset counter
+
+	;check state
+	ldrb	r1, [r9]
+
+	cmp		r1, #1
+	beq		ccw_first_rotation
+
+	cmp		r1, #7
+	beq		ccw_second_rotation
+
+	b		ccw_face_rotation1_end
+
+ccw_first_rotation:
+	mov		r0, #8
+	strb	r0, [r9]
+
+ccw_first_turn:
+	ldrb	r0, [r4, r3]
+	sub		r3, #1
+	strb	r0, [r5, r3]
+
+	cmp		r3, #0
+	bgt		ccw_first_turn
+
+	; sqaure 1 case
+	ldrb	r0, [r4]
+	strb	r0, [r5, #7]
+
+	;square 9 is the same
+	ldrb	r0, [r4, #8]
+	strb	r0, [r5, #8]
+
+	;save into addr_rotation from cube.s
+	str		r5, [r8]
+
+	b		ccw_face_rotation1_end
+
+
+ccw_second_rotation:
+
+	mov		r0, #1
+	strb	r0, [r9]
+ccw_second_turn:
+	ldrb	r0, [r4, r3]
+	sub		r3, #2
+	strb	r0, [r5, r3]
+
+	add		r3, #1
+	cmp		r3, #1
+	bgt		ccw_second_turn
+
+	; square 2 case
+	ldrb	r0, [r4, #1]
+	strb	r0, [r5, #7]
+
+	; sqaure 1 case
+	ldrb	r0, [r4]
+	strb	r0, [r5, #6]
+
+	;square 9 is the same
+	ldrb	r0, [r4, #8]
+	strb	r0, [r5, #8]
+
+	;save into addr_rotation from cube.s
+	str		r5, [r8]
+
+	; save the blank face as the real face.
+	mov		r0, #0
+ccw_saveToCurrentFace:
+	ldrb	r1, [r5], #1
+	strb	r1, [r4], #1
+	add		r0, #1
+	cmp		r0, #9
+	blt		ccw_saveToCurrentFace
+
+	; save state
+	mov		r0, #9
+	strb	r0, [r9]
+
+	; reset rotation
+	ldr		r1, ptr_rotationSelect
+	mov		r0, #0
+	strb	r0, [r1]
+
+	pop		{lr}
+	mov		pc, lr
+
+ccw_face_rotation1_end:
+	pop 	{lr}
+	b		actual_end
 
