@@ -195,7 +195,7 @@ playerYellow: 	.string 27 , "[103m    ", 	27, "[40m", 0
 fill_rotation_face:		.byte 	0, 0, 0, 0, 0, 0, 0, 0, 0
 animation_face:			.word	0
 
-movesPlacement:		.equ	0x16
+movesPlacement:		.equ	0x07
 
 	.text
 
@@ -216,6 +216,7 @@ movesPlacement:		.equ	0x16
 	.global get_face
 	.global	show_home_screen
 	.global delay_us
+	.global set_can_update_clock
 
 	; rotation sequences
 	.global	rotLeftSeq
@@ -1436,9 +1437,18 @@ wait_for_space:
 	cmp 	r0, #0
 	beq		wait_for_space
 
-
-
 	bl		restart_game
+
+	mov		r0, #25000
+	bl		delay_us
+
+	bl 	set_can_update_clock
+
+
+
+	; set the game state
+	mov		r0, #1
+	strb	r0, [r9]
 
 	mov 	r0, #0
 	mov		r3, #0
@@ -1545,9 +1555,12 @@ restart_game:
 	bl		lcd_data
 
 
+
+
 	; set the game state
 	mov		r0, #1
 	strb	r0, [r9]
+
 
 	; copy reset faces to faces
 	bl		copy_reset_faces
@@ -2050,6 +2063,7 @@ pickColor:
 	cmp		r1, #4
 	bne		not_replay
 	bl		restart_game
+
 	b		actual_end
 
 not_replay:
@@ -2176,6 +2190,21 @@ unpause_game:
 
 	bl		lcd_print_time_and_moves
 
+	; update move count
+	ldr		r0, ptr_movesPosition
+	bl		output_string
+
+	ldr		r1, ptr_game_moves
+	ldr		r0, [r1]
+	ldr		r1, ptr_print_moves
+	bl		int2string
+	mov		r0, r1
+	push	{r0}
+	bl		output_string
+	pop		{r0}
+
+	mov		r1, #movesPlacement	; row 2 column 6 start printing
+	bl		lcd_print_string
 
 	b		actual_end
 

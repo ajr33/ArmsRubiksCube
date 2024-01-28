@@ -67,7 +67,7 @@ ptr_addr_rotation:	.word	addr_rotation
 ptr_quit_message:	.word	quit_message
 
 cubeGame:
-	push	{lr}
+ 	push	{lr}
 
 	ldr		r5, ptr_rotData
 	ldr		r7, ptr_peekData

@@ -31,9 +31,9 @@ win_screen_lcd:			.string "    YOU WON!    ", 0
 quit_screen_lcd:		.string "Thanks for      ", 0xA
 						.string "playing! Goodbye", 0
 
-time_and_moves_text:	.string "     Moves:     ", 0
-
-sixteen_spaces:			.string "                ",0
+moves_text:				.string "Moves:          ", 0
+time_text: 				.string "Time:           ", 0
+sixteen_spaces:			.string "                ", 0
 
 
 	.text
@@ -62,7 +62,8 @@ ptr_pause_lcd:		.word 	pause_screen_lcd
 ptr_win_lcd:		.word	win_screen_lcd
 ptr_quit_lcd:		.word	quit_screen_lcd
 
-ptr_time_moves: 	.word	time_and_moves_text
+ptr_moves_text: 	.word	moves_text
+ptr_time_text: 		.word	time_text
 ptr_16_spaces:		.word	sixteen_spaces
 
 
@@ -71,14 +72,26 @@ lcd_print_time_and_moves:
 	mov		r1, #0
 	bl		move_lcd_cursor
 
-	ldr		r3, ptr_time_moves
+	ldr		r3, ptr_moves_text
 
 tm1:
 	ldrb	r0, [r3], #1
 	cmp		r0, #0
-	beq		time_move_done
+	beq		show_time_on_lcd
 	bl		lcd_data
 	b		tm1
+
+show_time_on_lcd:
+	mov		r1, #0x10
+	bl		move_lcd_cursor
+
+	ldr		r3, ptr_time_text
+tm2:
+	ldrb	r0, [r3], #1
+	cmp		r0, #0
+	beq		time_move_done
+	bl		lcd_data
+	b		tm2
 
 time_move_done:
 	pop		{lr}

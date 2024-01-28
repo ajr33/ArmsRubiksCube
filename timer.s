@@ -13,7 +13,7 @@ rgb_data:	.byte	2 	; 2 - red
 					  	; C - cyan
 					  	; E - white
 
-
+can_update_clock:		.byte 0
 
 	.text
 
@@ -31,6 +31,7 @@ rgb_data:	.byte	2 	; 2 - red
     .global show_player_time
     .global draw_colors
     .global animate_rotation
+    .global set_can_update_clock
 
 	.global		lcd_cmd
 	.global		lcd_data
@@ -58,6 +59,7 @@ ptr_print_time:		.word	print_time
 ;rgb data
 ptr_rgb:			.word	rgb_data
 
+ptr_can_update_clock: .word	can_update_clock
 
 ;TIMER OFFSETS
 RCGCTIMER: 	    .equ 0x604 	            ;Timer Run Mode Clock Gating Control
@@ -348,6 +350,10 @@ Timer1_Handler:
 	cmp		r0, #4
 	beq		rgb_win
 
+	ldr		r1, ptr_can_update_clock
+	ldrb	r0, [r1]
+	cmp		r0, #1
+	bne		Timer_Handler_return
 
 	;increment game clock
 	ldr		r0, ptr_timePosition
@@ -361,18 +367,21 @@ Timer1_Handler:
 	bl		int2string
 
 	mov		r0, r1
-;	push	{r0}
+	push	{r0}
 	bl		output_string
-;	pop		{r0}
+	pop		{r0}
 
-;	mov		r1, #0x13		; row 2 column 3 start printing
-;	bl		lcd_print_string
+	mov		r1, #0x16		; row 2 column 5 start printing
+	bl		lcd_print_string
 
 	b		Timer_Handler_return
 
 
-
-
+set_can_update_clock:
+	mov		r0, #1
+	ldr		r1, ptr_can_update_clock
+	strb	r0, [r1]
+	mov		pc, lr
 
 
 
